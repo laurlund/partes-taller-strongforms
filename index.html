@@ -43,67 +43,38 @@
 </header>
 
 <main>
+    <!-- SECCIONES DE NAVEGACIÓN -->
     <div id="vSel" class="pg active">
         <h2 style="text-align: center;">ELEGIR NOMBRE</h2>
         <div id="workerGrid" class="grid-w"></div>
     </div>
 
-    <div id="vJor" class="pg">
-        <div id="jorHeader" class="card"></div>
-        <button class="btn-main" onclick="openForm()"><i class="fa fa-plus"></i> NUEVO PARTE</button>
-        <h3 style="border-bottom: 3px solid #000; padding-bottom: 5px;">HOY</h3>
-        <div id="jorList"></div>
-    </div>
-
-    <div id="vFrm" class="pg">
-        <h2>DATOS DEL TRABAJO</h2>
-        <div class="card">
-            <label>ACTIVIDAD</label>
-            <div id="chipTypes" class="chips"></div>
-            <label>CLIENTE</label>
-            <input type="text" id="inCli" list="dlCli" placeholder="Cliente...">
-            <datalist id="dlCli"></datalist>
-            <label>PROYECTO</label>
-            <input type="text" id="inPro" list="dlPro" placeholder="Proyecto...">
-            <datalist id="dlPro"></datalist>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div><label>INICIO</label><input type="time" id="inIni" value="06:00" onchange="calcH()"></div>
-                <div><label>FIN</label><input type="time" id="inFin" value="14:00" onchange="calcH()"></div>
-            </div>
-            <p style="font-size: 22px; text-align: center; background: #000; color: #FFF; padding: 10px; font-weight: 900;">TOTAL: <span id="lblHoras">8.0</span>h</p>
-            <label>NOTAS</label>
-            <textarea id="inDes" rows="2"></textarea>
-            <button class="btn-main" onclick="saveE()">GUARDAR</button>
-            <button class="btn-main btn-sec" onclick="goBack()">VOLVER</button>
-        </div>
-    </div>
-
     <div id="vDash" class="pg">
         <h2>PANEL DE CONTROL</h2>
         <div class="card">
-            <label>FILTRAR CLIENTE</label>
+            <label>FILTRAR POR CLIENTE</label>
             <select id="fCli" onchange="renderDash()"></select>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div><label>DESDE</label><input type="date" id="fDesde" onchange="renderDash()"></div>
                 <div><label>HASTA</label><input type="date" id="fHasta" onchange="renderDash()"></div>
             </div>
-            <button class="btn-main btn-sec" onclick="resetFilters()">MES ACTUAL / TODOS</button>
+            <button class="btn-main btn-sec" onclick="resetFilters()">MOSTRAR TODO MAYO</button>
         </div>
-        <div class="card" style="display: flex; justify-content: space-around; background: #000; color: #FFF;">
-            <div style="text-align: center;"><div id="stHoras" style="font-size: 28px; font-weight: 900;">0</div><div>HORAS</div></div>
-            <div style="text-align: center;"><div id="stPartes" style="font-size: 28px; font-weight: 900;">0</div><div>PARTES</div></div>
+        <div class="card" style="display: flex; justify-content: space-around; background: #000; color: #FFF; padding: 20px;">
+            <div style="text-align: center;"><div id="stHoras" style="font-size: 32px; font-weight: 900;">0</div><div>HORAS</div></div>
+            <div style="text-align: center;"><div id="stPartes" style="font-size: 32px; font-weight: 900;">0</div><div>PARTES</div></div>
         </div>
         <div class="card"><h3>HORAS POR EQUIPO</h3><div id="chartWorkers"></div></div>
         <div class="card"><h3>HORAS POR CLIENTE</h3><div id="chartClients"></div></div>
-        <button class="btn-main" onclick="syncAll()">SYNC CON GOOGLE</button>
+        <button class="btn-main" onclick="syncAll()">SINCRONIZAR CON GOOGLE</button>
         <button class="btn-main btn-sec" onclick="sw('pgAdmin')">AJUSTES</button>
     </div>
 
     <div id="pgAdmin" class="pg">
         <h2>AJUSTES</h2>
         <div class="card">
-            <label>URL GOOGLE SCRIPT</label>
-            <input type="text" id="inUrl">
+            <label>URL GOOGLE SCRIPT (/exec)</label>
+            <input type="text" id="inUrl" placeholder="[link removed]">
             <button class="btn-main" onclick="saveUrl()">GUARDAR URL</button>
         </div>
     </div>
@@ -125,6 +96,7 @@
 </div>
 
 <script>
+// --- CONFIGURACIÓN DE TRABAJADORES ---
 var W = [
   {id:1, n:'Andres', ini:'AN', c:'#E8740C', pin:'dres', admin:false},
   {id:2, n:'Ramon', ini:'RA', c:'#059669', pin:'amon', admin:false},
@@ -136,21 +108,16 @@ var W = [
   {id:8, n:'Fernando', ini:'FE', c:'#E8740C', pin:'ando', admin:false},
   {id:9, n:'Sergio', ini:'SE', c:'#DC2626', pin:'7777', admin:true}
 ];
-var TT = [
-  {id:'00_matric', n:'Matriceria', i:'fa-cogs'}, {id:'01_sold_alu', n:'Soldar', i:'fa-fire'},
-  {id:'03_corte', n:'Cortar', i:'fa-cut'}, {id:'04_almacen', n:'Almacenaje', i:'fa-warehouse'},
-  {id:'05_carga', n:'Carga/descarga', i:'fa-truck'}, {id:'06_ron_01', n:'Robot', i:'fa-robot'},
-  {id:'07_limpieza', n:'Limpieza', i:'fa-broom'}, {id:'08_pintura', n:'Pintura', i:'fa-paint-roller'},
-  {id:'09_otros', n:'Otros', i:'fa-ellipsis-h'}
-];
-var P = null; var selT = null; var tempW = null;
+
+var P = null; var tempW = null;
 var gsUrl = localStorage.getItem('gs_url') || '';
 var partes = JSON.parse(localStorage.getItem('pt_p')) || [];
 
 function init() {
-    renderWorkers(); renderTypes(); resetFilters();
+    renderWorkers(); resetFilters();
     document.getElementById('inUrl').value = gsUrl;
 }
+
 function renderWorkers() {
     document.getElementById('workerGrid').innerHTML = W.map(w => `
         <button class="btn-w" onclick="openPin(${w.id})">
@@ -158,97 +125,82 @@ function renderWorkers() {
             <div style="font-size:16px">${w.n}</div>
         </button>`).join('');
 }
+
 function openPin(id) {
     tempW = W.find(x => x.id === id);
     document.getElementById('pinName').innerText = tempW.n.toUpperCase();
     document.getElementById('pinInput').value = '';
     document.getElementById('modalPin').style.display = 'flex';
 }
+
 function checkPin() {
     if(document.getElementById('pinInput').value === tempW.pin) {
         P = tempW; document.getElementById('modalPin').style.display = 'none';
         sw(P.admin ? 'vDash' : 'vJor');
     } else { alert('PIN INCORRECTO'); }
 }
+
 function sw(id) {
     document.querySelectorAll('.pg').forEach(p => p.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     document.getElementById('navBar').style.display = (id === 'vSel') ? 'none' : 'flex';
     if(id === 'vDash') { populateFilters(); renderDash(); }
-    if(id === 'vJor') renderJor();
 }
+
 function resetFilters() {
-    let now = new Date();
-    document.getElementById('fDesde').value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-    document.getElementById('fHasta').value = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+    document.getElementById('fDesde').value = "2026-05-01";
+    document.getElementById('fHasta').value = "2026-05-31";
     document.getElementById('fCli').value = "ALL";
     if(P && P.admin) renderDash();
 }
+
 function populateFilters() {
     let cl = [...new Set(partes.map(p => p.cliente).filter(Boolean))].sort();
-    document.getElementById('fCli').innerHTML = '<option value="ALL">-- TODOS LOS CLIENTES --</option>' + cl.map(c => `<option value="${c}">${c}</option>`).join('');
-    document.getElementById('dlCli').innerHTML = cl.map(c => `<option value="${c}">`).join('');
-    let pr = [...new Set(partes.map(p => p.proyecto).filter(Boolean))].sort();
-    document.getElementById('dlPro').innerHTML = pr.map(p => `<option value="${p}">`).join('');
+    document.getElementById('fCli').innerHTML = '<option value="ALL">-- TODOS LOS CLIENTES --</option>' + 
+        cl.map(c => `<option value="${c}">${c}</option>`).join('');
 }
-function calcH() {
-    let i = document.getElementById('inIni').value.split(':');
-    let f = document.getElementById('inFin').value.split(':');
-    let h = (parseInt(f[0]) + parseInt(f[1])/60) - (parseInt(i[0]) + parseInt(i[1])/60);
-    if(h < 0) h += 24;
-    document.getElementById('lblHoras').innerText = h.toFixed(1);
-}
-function renderTypes() {
-    document.getElementById('chipTypes').innerHTML = TT.map(t => `
-        <div class="chip ${selT===t.n?'active':''}" onclick="selT='${t.n}';renderTypes()"><i class="fa ${t.i}"></i> ${t.n}</div>`).join('');
-}
-function openForm() { 
-    selT = null; renderTypes(); 
-    document.getElementById('inCli').value = ''; document.getElementById('inPro').value = ''; document.getElementById('inDes').value = '';
-    sw('vFrm'); 
-}
-function goBack() { sw(P.admin ? 'vDash' : 'vJor'); }
-function saveE() {
-    if(!selT) return alert('ELIGE UNA ACTIVIDAD');
-    let d = {
-        id: Date.now(), fecha: new Date().toISOString().split('T')[0],
-        worker_id: P.id, nombre: P.n, cliente: document.getElementById('inCli').value.toUpperCase(),
-        proyecto: document.getElementById('inPro').value.toUpperCase(), tipo: selT,
-        inicio: document.getElementById('inIni').value, fin: document.getElementById('inFin').value,
-        horas: parseFloat(document.getElementById('lblHoras').innerText),
-        descripcion: document.getElementById('inDes').value, sy: false, timestamp: new Date().toISOString()
-    };
-    partes.push(d); localStorage.setItem('pt_p', JSON.stringify(partes));
-    if(gsUrl) fetch(gsUrl, { method:'POST', mode:'no-cors', body:JSON.stringify({action:'saveParte', data:d}) });
-    alert('GUARDADO'); populateFilters(); sw('vJor');
-}
+
 function syncAll() {
-    if(!gsUrl) return alert('CONFIGURA LA URL');
-    fetch(`${gsUrl}?action=getPartes`).then(r => r.json()).then(res => {
+    if(!gsUrl) return alert('CONFIGURA LA URL EN AJUSTES');
+    alert('Iniciando sincronización...');
+    fetch(`${gsUrl}?action=getPartes`)
+    .then(r => r.json())
+    .then(res => {
         if(res.status === 'ok') { 
-            partes = res.partes; localStorage.setItem('pt_p', JSON.stringify(partes)); 
-            alert('DATOS ACTUALIZADOS: ' + partes.length + ' REGISTROS');
+            partes = res.partes; 
+            localStorage.setItem('pt_p', JSON.stringify(partes)); 
+            alert('¡ÉXITO! Descargados ' + partes.length + ' registros.');
             populateFilters(); renderDash();
+        } else {
+            alert('Error del script: ' + res.msg);
         }
-    });
+    })
+    .catch(e => alert('Fallo de conexión. Revisa la URL y el acceso del script.'));
 }
+
 function renderDash() {
     let d1 = document.getElementById('fDesde').value;
     let d2 = document.getElementById('fHasta').value;
     let fc = document.getElementById('fCli').value;
+
     let filtrados = partes.filter(p => (p.fecha >= d1 && p.fecha <= d2) && (fc === "ALL" || p.cliente === fc));
+    
     let hT = 0; let wD = {}; let cD = {};
     filtrados.forEach(p => { 
-        hT += parseFloat(p.horas); 
-        wD[p.nombre] = (wD[p.nombre] || 0) + parseFloat(p.horas); 
+        let h = parseFloat(p.horas) || 0;
+        hT += h; 
+        wD[p.nombre] = (wD[p.nombre] || 0) + h; 
 
-        cD[p.cliente || 'OTROS'] = (cD[p.cliente || 'OTROS'] || 0) + parseFloat(p.horas);
+        cD[p.cliente || 'OTROS'] = (cD[p.cliente || 'OTROS'] || 0) + h;
     });
+
     document.getElementById('stHoras').innerText = hT.toFixed(1);
     document.getElementById('stPartes').innerText = filtrados.length;
-    renderBar('chartWorkers', wD); renderBar('chartClients', cD);
+    renderBarChart('chartWorkers', wD);
+    renderBarChart('chartClients', cD);
 }
-function renderBar(id, data) {
+
+function renderBarChart(id, data) {
     let m = Math.max(...Object.values(data), 1);
     let entries = Object.entries(data).sort((a,b) => b[1] - a[1]);
     document.getElementById(id).innerHTML = entries.map(([k,v]) => `
@@ -257,17 +209,14 @@ function renderBar(id, data) {
             <div class="bar-bg"><div class="bar-fill" style="width:${(v/m)*100}%"></div></div>
         </div>`).join('') || '<p>SIN DATOS EN ESTE RANGO</p>';
 }
-function renderJor() {
-    let hoy = new Date().toISOString().split('T')[0];
-    let p = partes.filter(x => x.fecha === hoy && x.worker_id === P.id);
-    document.getElementById('jorList').innerHTML = p.map(x => `
-        <div class="card" style="border-left: 10px solid #000;">
-            <div style="display:flex; justify-content:space-between; font-size:18px;"><b>${x.tipo.toUpperCase()}</b> <span>${x.horas}h</span></div>
-            <div style="font-size:15px; margin-top:5px;">${x.cliente} | ${x.proyecto}</div>
-        </div>`).join('') || '<p>SIN ENTRADAS HOY</p>';
-    document.getElementById('jorHeader').innerHTML = `<h2 style="border:none; margin:0">${P.n.toUpperCase()}</h2><p style="font-size:18px; font-weight:bold;">${p.reduce((s,x)=>s+parseFloat(x.horas),0).toFixed(1)}h HOY</p>`;
+
+function saveUrl() { 
+    let u = document.getElementById('inUrl').value;
+    if(!u.includes('/exec')) return alert('La URL debe terminar en /exec');
+    localStorage.setItem('gs_url', u); 
+    alert('URL GUARDADA'); location.reload(); 
 }
-function saveUrl() { localStorage.setItem('gs_url', document.getElementById('inUrl').value); alert('URL GUARDADA'); location.reload(); }
+
 init();
 </script>
 </body>

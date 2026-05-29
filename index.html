@@ -3,121 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Strongforms — Control Total v3.3</title>
+    <title>Strongforms — Control Avanzado v4.0</title>
     <link rel="stylesheet" href="[link removed]">
     <style>
         :root { --bg: #FFFFFF; --txt: #000000; --acc: #E8740C; --border: #000000; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: Arial, sans-serif; background: var(--bg); color: var(--txt); }
-        header { padding: 15px; background: #000; color: #FFF; display: flex; justify-content: space-between; align-items: center; }
-        main { padding: 15px; padding-bottom: 90px; max-width: 600px; margin: 0 auto; }
+        header { padding: 15px; background: #000; color: #FFF; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        main { padding: 15px; padding-bottom: 90px; max-width: 800px; margin: 0 auto; }
         .pg { display: none; } .pg.active { display: block; }
         .card { border: 3px solid var(--border); padding: 15px; margin-bottom: 15px; background: #FFF; }
-        h2 { margin: 0 0 15px 0; font-size: 24px; border-bottom: 3px solid #000; padding-bottom: 5px; text-transform: uppercase; }
+        h2 { margin: 0 0 15px 0; font-size: 22px; border-bottom: 3px solid #000; padding-bottom: 5px; text-transform: uppercase; }
         .grid-w { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .btn-w { padding: 20px; border: 3px solid var(--border); background: #FFF; display: flex; flex-direction: column; align-items: center; cursor: pointer; font-weight: bold; }
         .ini { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #000; display: flex; align-items: center; justify-content: center; color: #FFF; margin-bottom: 10px; font-size: 20px; }
-        label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 16px; }
-        input, select, textarea { width: 100%; padding: 15px; border: 3px solid var(--border); font-size: 18px; font-weight: bold; margin-bottom: 20px; }
-        .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
-        .chip { padding: 12px; border: 2px solid #000; font-weight: bold; cursor: pointer; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; text-transform: uppercase; }
+        input, select, textarea { width: 100%; padding: 12px; border: 3px solid var(--border); font-size: 16px; font-weight: bold; margin-bottom: 15px; }
+        .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
+        .chip { padding: 10px; border: 2px solid #000; font-weight: bold; cursor: pointer; font-size: 13px; }
         .chip.active { background: var(--acc); color: #FFF; border-color: var(--acc); }
         nav { position: fixed; bottom: 0; width: 100%; background: #000; display: flex; justify-content: space-around; padding: 12px 0; }
-        nav button { background: none; border: none; color: #AAA; display: flex; flex-direction: column; align-items: center; font-weight: bold; }
+        nav button { background: none; border: none; color: #AAA; display: flex; flex-direction: column; align-items: center; font-weight: bold; font-size: 10px; }
         nav button.active { color: #FFF; }
-        .btn-main { width: 100%; padding: 20px; background: #000; color: #FFF; font-weight: bold; font-size: 20px; border: none; text-transform: uppercase; cursor: pointer; }
-        .btn-sec { background: #FFF; color: #000; border: 3px solid #000; margin-top: 10px; }
+        .btn-main { width: 100%; padding: 18px; background: #000; color: #FFF; font-weight: bold; font-size: 18px; border: none; text-transform: uppercase; cursor: pointer; }
+        .btn-sec { background: #FFF; color: #000; border: 3px solid #000; margin-top: 8px; }
         #modalPin { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; z-index: 1000; }
-        .pin-box { background: #FFF; padding: 30px; border: 5px solid var(--acc); width: 90%; max-width: 400px; text-align:center; }
+        .pin-box { background: #FFF; padding: 25px; border: 5px solid var(--acc); width: 90%; max-width: 350px; text-align:center; }
+        
+        /* Dashboard Filters */
+        .f-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .bar-container { margin-bottom: 15px; }
+        .bar-label { display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; margin-bottom: 4px; }
+        .bar-bg { background: #EEE; border: 1px solid #000; height: 16px; position: relative; }
+        .bar-fill { background: var(--acc); height: 100%; transition: width 0.5s; }
     </style>
 </head>
 <body>
 
 <header>
     <div style="font-weight: 900;">STRONGFORMS</div>
-    <div id="statusBadge" class="badge">ONLINE</div>
+    <div id="statusBadge" class="badge">CONECTADO</div>
 </header>
 
 <main>
+    <!-- SELECCIÓN -->
     <div id="vSel" class="pg active">
-        <h2 style="text-align: center;">ELEGIR TRABAJADOR</h2>
+        <h2 style="text-align: center;">IDENTIFICACIÓN</h2>
         <div id="workerGrid" class="grid-w"></div>
     </div>
 
+    <!-- JORNADA TRABAJADOR -->
     <div id="vJor" class="pg">
         <div id="jorHeader" class="card"></div>
-        <button class="btn-main" onclick="openForm()"><i class="fa fa-plus"></i> NUEVO PARTE</button>
-        <h3 style="margin-top: 25px; border-bottom: 3px solid #000;">HOY</h3>
+        <button class="btn-main" onclick="openForm()"><i class="fa fa-plus"></i> NUEVO REGISTRO</button>
+        <h3 style="border-bottom: 3px solid #000; padding-bottom: 5px;">MIS ENTRADAS DE HOY</h3>
         <div id="jorList"></div>
     </div>
 
+    <!-- FORMULARIO -->
     <div id="vFrm" class="pg">
-        <h2>DATOS DEL TRABAJO</h2>
+        <h2>NUEVA ENTRADA</h2>
         <div class="card">
             <label>ACTIVIDAD</label>
             <div id="chipTypes" class="chips"></div>
             <label>CLIENTE</label>
-            <input type="text" id="inCli" list="dlCli" placeholder="Cliente...">
+            <input type="text" id="inCli" list="dlCli" placeholder="Seleccionar cliente...">
             <datalist id="dlCli"></datalist>
             <label>PROYECTO</label>
-            <input type="text" id="inPro" list="dlPro" placeholder="Proyecto...">
+            <input type="text" id="inPro" list="dlPro" placeholder="Nombre proyecto...">
             <datalist id="dlPro"></datalist>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="f-grid">
                 <div><label>INICIO</label><input type="time" id="inIni" value="06:00" onchange="calcH()"></div>
                 <div><label>FIN</label><input type="time" id="inFin" value="14:00" onchange="calcH()"></div>
             </div>
-            <p style="font-size: 24px; text-align: center; background: #000; color: #FFF; padding: 10px;">TOTAL: <span id="lblHoras">8.0</span>h</p>
+            <p style="font-size: 22px; text-align: center; background: #000; color: #FFF; padding: 10px; font-weight: 900;">TOTAL: <span id="lblHoras">8.0</span> HORAS</p>
             <label>NOTAS</label>
-            <textarea id="inDes" rows="3"></textarea>
-            <button class="btn-main" onclick="saveE()">GUARDAR</button>
-            <button class="btn-main btn-sec" onclick="goBack()">VOLVER</button>
+            <textarea id="inDes" rows="2"></textarea>
+            <button class="btn-main" onclick="saveE()">GUARDAR AHORA</button>
+            <button class="btn-main btn-sec" onclick="goBack()">CANCELAR</button>
         </div>
     </div>
 
+    <!-- DASHBOARD (ADMIN) -->
     <div id="vDash" class="pg">
-        <h2>DASHBOARD MENSUAL</h2>
-        <div class="card" style="display: flex; justify-content: space-around; background: #000; color: #FFF;">
-            <div><div id="stHoras" style="font-size: 32px; font-weight: 900;">0</div><div>HORAS</div></div>
-            <div><div id="stPartes" style="font-size: 32px; font-weight: 900;">0</div><div>PARTES</div></div>
-        </div>
+        <h2>DASHBOARD FILTRADO</h2>
+        
         <div class="card">
-            <h3>HORAS POR EQUIPO</h3>
+            <label>FILTRAR POR CLIENTE</label>
+            <select id="fCli" onchange="renderDash()">
+                <option value="ALL">-- TODOS LOS CLIENTES --</option>
+            </select>
+            
+            <div class="f-grid">
+                <div><label>DESDE</label><input type="date" id="fDesde" onchange="renderDash()"></div>
+                <div><label>HASTA</label><input type="date" id="fHasta" onchange="renderDash()"></div>
+            </div>
+            <button class="btn-main btn-sec" onclick="resetFilters()">LIMPIAR FILTROS / MES ACTUAL</button>
+        </div>
+
+        <div class="card" style="display: flex; justify-content: space-around; background: #000; color: #FFF; padding: 20px;">
+            <div style="text-align: center;"><div id="stHoras" style="font-size: 32px; font-weight: 900;">0</div><div style="font-size: 12px;">HORAS TOTALES</div></div>
+            <div style="text-align: center;"><div id="stPartes" style="font-size: 32px; font-weight: 900;">0</div><div style="font-size: 12px;">REGISTROS</div></div>
+        </div>
+
+        <div class="card">
+            <h3 style="border-bottom: 2px solid #000;">HORAS POR EQUIPO</h3>
             <div id="chartWorkers"></div>
         </div>
+
         <div class="card">
-            <h3>HORAS POR CLIENTE</h3>
+            <h3 style="border-bottom: 2px solid #000;">HORAS POR CLIENTE</h3>
             <div id="chartClients"></div>
         </div>
-        <button class="btn-main" onclick="syncAll()">SINCRONIZAR DATOS</button>
-        <button class="btn-main btn-sec" onclick="sw('pgAdmin')">AJUSTES</button>
+
+        <button class="btn-main" onclick="syncAll()">SINCRONIZAR CON SHEETS</button>
+        <button class="btn-main btn-sec" onclick="sw('pgAdmin')">CONFIGURACIÓN</button>
     </div>
 
+    <!-- CONFIG -->
     <div id="pgAdmin" class="pg">
-        <h2>AJUSTES</h2>
+        <h2>AJUSTES TÉCNICOS</h2>
         <div class="card">
-            <label>URL DEL SCRIPT</label>
-            <input type="text" id="inUrl">
+            <label>URL GOOGLE APPS SCRIPT</label>
+            <input type="text" id="inUrl" placeholder="[link removed]...">
             <button class="btn-main" onclick="saveUrl()">GUARDAR URL</button>
         </div>
+        <button class="btn-main btn-sec" style="color:red; border-color:red;" onclick="clearLocal()">BORRAR MEMORIA LOCAL</button>
     </div>
 </main>
 
 <nav id="navBar" style="display: none;">
-    <button onclick="sw('vSel')"><i class="fa fa-users"></i>EQUIPO</button>
-    <button onclick="sw('vJor')"><i class="fa fa-clock"></i>MI DÍA</button>
-    <button onclick="sw('vDash')"><i class="fa fa-chart-bar"></i>DASH</button>
+    <button onclick="sw('vSel')" id="nHome"><i class="fa fa-users"></i>EQUIPO</button>
+    <button onclick="sw('vJor')" id="nJor"><i class="fa fa-clock"></i>HOY</button>
+    <button onclick="sw('vDash')" id="nDash"><i class="fa fa-chart-line"></i>PANEL</button>
 </nav>
 
 <div id="modalPin">
     <div class="pin-box">
-        <h2 id="pinName" style="border:none">NOMBRE</h2>
-        <input type="password" id="pinInput" pattern="[0-9]*" inputmode="numeric" style="text-align:center; font-size:40px;">
+        <h2 id="pinName" style="border:none"></h2>
+        <label>PIN DE ACCESO</label>
+        <input type="password" id="pinInput" pattern="[0-9]*" inputmode="numeric" style="text-align:center; font-size:40px; margin-bottom: 20px;">
         <button class="btn-main" onclick="checkPin()">ENTRAR</button>
         <button class="btn-main btn-sec" onclick="document.getElementById('modalPin').style.display='none'">CANCELAR</button>
     </div>
 </div>
 
 <script>
+// --- CONFIGURACIÓN ---
 var W = [
   {id:1, n:'Andres', ini:'AN', c:'#E8740C', pin:'dres', admin:false},
   {id:2, n:'Ramon', ini:'RA', c:'#059669', pin:'amon', admin:false},
@@ -143,7 +175,7 @@ var gsUrl = localStorage.getItem('gs_url') || '';
 var partes = JSON.parse(localStorage.getItem('pt_p')) || [];
 
 function init() {
-    renderWorkers(); renderTypes(); populateDL();
+    renderWorkers(); renderTypes(); resetFilters();
     document.getElementById('inUrl').value = gsUrl;
 }
 
@@ -151,7 +183,7 @@ function renderWorkers() {
     document.getElementById('workerGrid').innerHTML = W.map(w => `
         <button class="btn-w" onclick="openPin(${w.id})">
             <div class="ini" style="background:${w.c}">${w.ini}</div>
-            <div style="font-size:18px">${w.n}</div>
+            <div style="font-size:16px">${w.n}</div>
         </button>`).join('');
 }
 
@@ -173,19 +205,29 @@ function sw(id) {
     document.querySelectorAll('.pg').forEach(p => p.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     document.getElementById('navBar').style.display = (id === 'vSel') ? 'none' : 'flex';
-    if(id === 'vDash') renderDash();
+    if(id === 'vDash') { populateFilters(); renderDash(); }
     if(id === 'vJor') renderJor();
 }
 
-function openForm() { 
-    selT = null; renderTypes(); 
-    document.getElementById('inCli').value = ''; 
-    document.getElementById('inPro').value = '';
-    document.getElementById('inDes').value = '';
-    sw('vFrm'); 
+function resetFilters() {
+    let now = new Date();
+    let first = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    let last = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+    document.getElementById('fDesde').value = first;
+    document.getElementById('fHasta').value = last;
+    document.getElementById('fCli').value = "ALL";
+    if(P && P.admin) renderDash();
 }
 
-function goBack() { sw(P.admin ? 'vDash' : 'vJor'); }
+function populateFilters() {
+    let cl = [...new Set(partes.map(p => p.cliente).filter(Boolean))].sort();
+    document.getElementById('fCli').innerHTML = '<option value="ALL">-- TODOS LOS CLIENTES --</option>' + 
+        cl.map(c => `<option value="${c}">${c}</option>`).join('');
+    
+    document.getElementById('dlCli').innerHTML = cl.map(c => `<option value="${c}">`).join('');
+    let pr = [...new Set(partes.map(p => p.proyecto).filter(Boolean))].sort();
+    document.getElementById('dlPro').innerHTML = pr.map(p => `<option value="${p}">`).join('');
+}
 
 function calcH() {
     let i = document.getElementById('inIni').value.split(':');
@@ -200,51 +242,62 @@ function renderTypes() {
         <div class="chip ${selT===t.n?'active':''}" onclick="selT='${t.n}';renderTypes()"><i class="fa ${t.i}"></i> ${t.n}</div>`).join('');
 }
 
+function openForm() { 
+    selT = null; renderTypes(); 
+    document.getElementById('inCli').value = ''; document.getElementById('inPro').value = ''; document.getElementById('inDes').value = '';
+    sw('vFrm'); 
+}
+
+function goBack() { sw(P.admin ? 'vDash' : 'vJor'); }
+
 function saveE() {
-    if(!selT) return alert('ELIGE UN TIPO');
+    if(!selT) return alert('ELIGE UNA ACTIVIDAD');
     let d = {
         id: Date.now(), fecha: new Date().toISOString().split('T')[0],
-        worker_id: P.id, nombre: P.n, cliente: document.getElementById('inCli').value,
-        proyecto: document.getElementById('inPro').value, tipo: selT,
+        worker_id: P.id, nombre: P.n, cliente: document.getElementById('inCli').value.toUpperCase(),
+        proyecto: document.getElementById('inPro').value.toUpperCase(), tipo: selT,
         inicio: document.getElementById('inIni').value, fin: document.getElementById('inFin').value,
         horas: parseFloat(document.getElementById('lblHoras').innerText),
         descripcion: document.getElementById('inDes').value, sy: false
     };
     partes.push(d); localStorage.setItem('pt_p', JSON.stringify(partes));
     if(gsUrl) fetch(gsUrl, { method:'POST', mode:'no-cors', body:JSON.stringify({action:'saveParte', data:d}) });
-    alert('GUARDADO'); populateDL(); sw('vJor');
+    alert('¡GUARDADO!'); sw('vJor');
 }
 
 function syncAll() {
-    if(!gsUrl) return alert('CONFIGURA LA URL');
+    if(!gsUrl) return alert('CONFIGURA URL EN AJUSTES');
     fetch(`${gsUrl}?action=getPartes`).then(r => r.json()).then(res => {
         if(res.status === 'ok') { 
             partes = res.partes; 
             localStorage.setItem('pt_p', JSON.stringify(partes)); 
-            renderDash(); populateDL(); alert('DATOS SINCRONIZADOS: ' + partes.length + ' REGISTROS'); 
+            alert('DESCARGADOS ' + partes.length + ' REGISTROS');
+            populateFilters(); renderDash();
         }
     });
 }
 
-function populateDL() {
-    let cl = [...new Set(partes.map(p => p.cliente).filter(Boolean))];
-    let pr = [...new Set(partes.map(p => p.proyecto).filter(Boolean))];
-    document.getElementById('dlCli').innerHTML = cl.map(c => `<option value="${c}">`).join('');
-    document.getElementById('dlPro').innerHTML = pr.map(p => `<option value="${p}">`).join('');
-}
-
 function renderDash() {
-    let mActual = new Date().toISOString().substring(0, 7); // YYYY-MM
-    let pMonth = partes.filter(p => p.fecha.startsWith(mActual));
+    let d1 = document.getElementById('fDesde').value;
+    let d2 = document.getElementById('fHasta').value;
+    let fc = document.getElementById('fCli').value;
+
+    let filtrados = partes.filter(p => {
+        let matchFecha = p.fecha >= d1 && p.fecha <= d2;
+        let matchCli = (fc === "ALL") || (p.cliente === fc);
+        return matchFecha && matchCli;
+    });
+
     let hT = 0; let wD = {}; let cD = {};
-    pMonth.forEach(p => { 
+    filtrados.forEach(p => { 
         hT += p.horas; 
         wD[p.nombre] = (wD[p.nombre] || 0) + p.horas; 
 
-        cD[p.cliente || 'Otros'] = (cD[p.cliente || 'Otros'] || 0) + p.horas;
+        cD[p.cliente || 'OTROS'] = (cD[p.cliente || 'OTROS'] || 0) + p.horas;
     });
+
     document.getElementById('stHoras').innerText = hT.toFixed(1);
-    document.getElementById('stPartes').innerText = pMonth.length;
+    document.getElementById('stPartes').innerText = filtrados.length;
     renderBarChart('chartWorkers', wD);
     renderBarChart('chartClients', cD);
 }
@@ -252,13 +305,14 @@ function renderDash() {
 function renderBarChart(id, data) {
     let m = Math.max(...Object.values(data), 1);
     let h = '';
-    for(let k in data) {
-        h += `<div style="margin-bottom:15px">
-            <div style="display:flex; justify-content:space-between; font-size:16px; font-weight:bold;"><span>${k}</span> <span>${data[k].toFixed(1)}h</span></div>
-            <div style="background:#EEE; border:1px solid #000; height:15px;"><div style="background:var(--acc); height:100%; width:${(data[k]/m)*100}%"></div></div>
+    let entries = Object.entries(data).sort((a,b) => b[1] - a[1]);
+    entries.forEach(([k,v]) => {
+        h += `<div class="bar-container">
+            <div class="bar-label"><span>${k}</span> <span>${v.toFixed(1)}h</span></div>
+            <div class="bar-bg"><div class="bar-fill" style="width:${(v/m)*100}%"></div></div>
         </div>`;
-    }
-    document.getElementById(id).innerHTML = h || '<p>SIN DATOS ESTE MES</p>';
+    });
+    document.getElementById(id).innerHTML = h || '<p>SIN DATOS EN ESTE RANGO</p>';
 }
 
 function renderJor() {
@@ -268,11 +322,12 @@ function renderJor() {
         <div class="card" style="border-left: 10px solid #000;">
             <div style="display:flex; justify-content:space-between; font-size:18px;"><b>${x.tipo.toUpperCase()}</b> <span>${x.horas}h</span></div>
             <div style="font-size:15px; margin-top:5px;">${x.cliente} | ${x.proyecto}</div>
-        </div>`).join('') || '<p>SIN ENTRADAS HOY</p>';
-    document.getElementById('jorHeader').innerHTML = `<h2 style="border:none; margin:0">${P.n.toUpperCase()}</h2><p style="font-size:18px; font-weight:bold;">${p.reduce((s,x)=>s+x.horas,0).toFixed(1)}h REGISTRADAS HOY</p>`;
+        </div>`).join('') || '<p>HOY NO HAS REGISTRADO NADA.</p>';
+    document.getElementById('jorHeader').innerHTML = `<h2 style="border:none; margin:0">${P.n.toUpperCase()}</h2><p style="font-size:18px; font-weight:bold;">${p.reduce((s,x)=>s+x.horas,0).toFixed(1)}h HOY</p>`;
 }
 
 function saveUrl() { localStorage.setItem('gs_url', document.getElementById('inUrl').value); alert('URL GUARDADA'); location.reload(); }
+function clearLocal() { if(confirm('¿ESTÁS SEGURO? SE BORRARÁN TODOS LOS DATOS LOCALES.')) { localStorage.clear(); location.reload(); } }
 
 init();
 </script>

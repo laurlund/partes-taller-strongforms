@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Partes Strongforms v3</title>
+    <title>Partes Strongforms v3.1</title>
     <link rel="stylesheet" href="[link removed]">
     <style>
         :root {
@@ -59,9 +59,8 @@
         nav button.active { color: var(--acc); }
         nav button i { font-size: 20px; margin-bottom: 4px; }
 
-        .btn-main { width: 100%; padding: 15px; background: var(--acc); border: none; color: white; font-weight: bold; border-radius: 8px; font-size: 16px; cursor: pointer; }
+        .btn-main { width: 100%; padding: 15px; background: var(--acc); border: none; color: white; font-weight: bold; border-radius: 8px; font-size: 16px; cursor: pointer; margin-bottom: 10px;}
         
-        /* Dashboard */
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .stat-card { background: #0d1117; padding: 10px; border-radius: 8px; text-align: center; }
         .stat-val { font-size: 20px; font-weight: bold; color: var(--acc); }
@@ -80,25 +79,22 @@
 </header>
 
 <main>
-    <!-- SELECCION TRABAJADOR -->
     <div id="vSel" class="pg active">
         <h2 style="text-align: center;">¿Quién entra el parte?</h2>
         <div id="workerGrid" class="grid-w"></div>
     </div>
 
-    <!-- JORNADA DEL TRABAJADOR -->
     <div id="vJor" class="pg">
         <div id="jorHeader" class="card"></div>
-        <button class="btn-main" onclick="sw('vFrm')"><i class="fa fa-plus"></i> Añadir entrada</button>
+        <button class="btn-main" onclick="openForm()"><i class="fa fa-plus"></i> Añadir entrada today</button>
         <h3 style="margin-top: 20px;">Entradas de hoy</h3>
         <div id="jorList"></div>
     </div>
 
-    <!-- DASHBOARD ADMIN -->
     <div id="vDash" class="pg">
-        <h2>Dashboard Administrador</h2>
+        <h2>Dashboard Hoy</h2>
         <div class="stat-grid">
-            <div class="stat-card"><div id="stHoras" class="stat-val">0</div><div class="stat-lbl">Horas Totales</div></div>
+            <div class="stat-card"><div id="stHoras" class="stat-val">0</div><div class="stat-lbl">Horas Hoy</div></div>
             <div class="stat-card"><div id="stPartes" class="stat-val">0</div><div class="stat-lbl">Partes Hoy</div></div>
         </div>
         <div class="card">
@@ -110,12 +106,11 @@
             <div id="chartClients"></div>
         </div>
         <div style="display: flex; gap: 10px;">
-            <button class="btn-main" style="background: #30363d;" onclick="sw('pgAdmin')">Configuración</button>
-            <button class="btn-main" onclick="syncAll()">Sincronizar</button>
+            <button class="btn-main" style="background: #30363d;" onclick="sw('pgAdmin')">Ajustes</button>
+            <button class="btn-main" onclick="syncAll()">Sync Datos</button>
         </div>
     </div>
 
-    <!-- FORMULARIO NUEVA ENTRADA -->
     <div id="vFrm" class="pg">
         <h2 id="frmTitle">Nueva Entrada</h2>
         <div class="card">
@@ -123,7 +118,7 @@
             <div id="chipTypes" class="chips"></div>
             
             <label>Cliente</label>
-            <input type="text" id="inCli" list="dlCli" placeholder="Nombre del cliente...">
+            <input type="text" id="inCli" list="dlCli" placeholder="Cliente...">
             <datalist id="dlCli"></datalist>
 
             <label>Proyecto</label>
@@ -131,36 +126,28 @@
             <datalist id="dlPro"></datalist>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div>
-                    <label>Inicio</label>
-                    <input type="time" id="inIni" value="06:00" onchange="calcH()">
-                </div>
-                <div>
-                    <label>Fin</label>
-                    <input type="time" id="inFin" value="14:00" onchange="calcH()">
-                </div>
+                <div><label>Inicio</label><input type="time" id="inIni" value="06:00" onchange="calcH()"></div>
+                <div><label>Fin</label><input type="time" id="inFin" value="14:00" onchange="calcH()"></div>
             </div>
 
             <label>Horas: <span id="lblHoras" style="font-weight: bold; color: var(--acc);">8.0</span></label>
-            
             <label>Descripción</label>
-            <textarea id="inDes" rows="3" placeholder="¿Qué has hecho?"></textarea>
+            <textarea id="inDes" rows="3" placeholder="Descripción del trabajo..."></textarea>
             
             <button class="btn-main" onclick="saveE()">GUARDAR PARTE</button>
-            <button class="btn-main" style="background: transparent; color: var(--txt-dim);" onclick="goBack()">Cancelar</button>
+            <button class="btn-main" style="background: transparent; border: 1px solid #30363d; color: var(--txt-dim);" onclick="goBack()">Cancelar</button>
         </div>
     </div>
 
-    <!-- PANEL ADMIN -->
     <div id="pgAdmin" class="pg">
-        <h2>Ajustes del Sistema</h2>
+        <h2>Ajustes</h2>
         <div class="card">
             <label>URL Google Apps Script</label>
             <input type="text" id="inUrl" placeholder="[link removed]">
-            <button class="btn-main" onclick="saveUrl()">Guardar URL</button>
+            <button class="btn-main" onclick="saveUrl()">Guardar Config</button>
         </div>
         <div class="card">
-            <button class="btn-main" style="background: #F85149;" onclick="clearLocal()">BORRAR DATOS LOCALES</button>
+            <button class="btn-main" style="background: #F85149;" onclick="clearLocal()">RESET APP</button>
         </div>
     </div>
 </main>
@@ -168,11 +155,10 @@
 <nav id="navBar" style="display: none;">
     <button onclick="sw('vSel')" id="nHome"><i class="fa fa-home"></i>Inicio</button>
     <button onclick="sw('vJor')" id="nJor"><i class="fa fa-calendar-day"></i>Hoy</button>
-    <button onclick="sw('vDash')" id="nDash"><i class="fa fa-chart-bar"></i>Dash</button>
+    <button onclick="sw('vDash')" id="nDash"><i class="fa fa-chart-bar"></i>Admin</button>
 </nav>
 
 <script>
-// --- DATOS MAESTROS ---
 var W = [
   {id:1, n:'Andres', ini:'AN', c:'#E8740C', pin:'dres', admin:false},
   {id:2, n:'Ramon', ini:'RA', c:'#059669', pin:'amon', admin:false},
@@ -186,210 +172,156 @@ var W = [
 ];
 
 var TT = [
-  {id:'00_matric', n:'Matriceria', i:'fa-cogs'},
-  {id:'01_sold_alu', n:'Soldar', i:'fa-fire'},
-  {id:'03_corte', n:'Cortar', i:'fa-cut'},
-  {id:'04_almacen', n:'Almacenaje', i:'fa-warehouse'},
-  {id:'05_carga', n:'Carga/descarga', i:'fa-truck'},
-  {id:'06_ron_01', n:'Produccion Robot', i:'fa-robot'},
-  {id:'07_limpieza', n:'Limpieza', i:'fa-broom'},
-  {id:'08_pintura', n:'Pintura', i:'fa-paint-roller'},
+  {id:'00_matric', n:'Matriceria', i:'fa-cogs'}, {id:'01_sold_alu', n:'Soldar', i:'fa-fire'},
+  {id:'03_corte', n:'Cortar', i:'fa-cut'}, {id:'04_almacen', n:'Almacenaje', i:'fa-warehouse'},
+  {id:'05_carga', n:'Carga/descarga', i:'fa-truck'}, {id:'06_ron_01', n:'Robot', i:'fa-robot'},
+  {id:'07_limpieza', n:'Limpieza', i:'fa-broom'}, {id:'08_pintura', n:'Pintura', i:'fa-paint-roller'},
   {id:'09_otros', n:'Otros', i:'fa-ellipsis-h'}
 ];
 
-// --- ESTADO ---
-var P = null; // Persona actual
-var selT = null; // Tipo trabajo seleccionado
+var P = null; var selT = null;
 var gsUrl = localStorage.getItem('gs_url') || '';
 var partes = JSON.parse(localStorage.getItem('pt_p')) || [];
 
-// --- INICIO ---
 function init() {
-    renderWorkers();
-    renderTypes();
+    renderWorkers(); renderTypes(); populateDL();
     document.getElementById('inUrl').value = gsUrl;
     updateStatus();
 }
 
 function renderWorkers() {
-    let h = '';
-    W.forEach(w => {
-        h += `<button class="btn-w" onclick="askPin(${w.id})">
+    document.getElementById('workerGrid').innerHTML = W.map(w => `
+        <button class="btn-w" onclick="askPin(${w.id})">
             <div class="ini" style="background:${w.c}">${w.ini}</div>
             <div>${w.n}</div>
-        </button>`;
-    });
-    document.getElementById('workerGrid').innerHTML = h;
+        </button>`).join('');
 }
 
 function renderTypes() {
-    let h = '';
-    TT.forEach(t => {
-        h += `<div class="chip" id="t-${t.id}" onclick="setT('${t.id}')"><i class="fa ${t.i}"></i> ${t.n}</div>`;
-    });
-    document.getElementById('chipTypes').innerHTML = h;
+    document.getElementById('chipTypes').innerHTML = TT.map(t => `
+        <div class="chip ${selT===t.n?'active':''}" onclick="setT('${t.id}')"><i class="fa ${t.i}"></i> ${t.n}</div>`).join('');
 }
 
 function setT(id) {
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    document.getElementById('t-'+id).classList.add('active');
     selT = TT.find(x => x.id === id).n;
+    renderTypes();
 }
 
-// --- NAVEGACION ---
 function sw(id) {
     document.querySelectorAll('.pg').forEach(p => p.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    if(id !== 'vSel') document.getElementById('navBar').style.display = 'flex';
+    document.getElementById('navBar').style.display = (id === 'vSel') ? 'none' : 'flex';
     if(id === 'vDash') renderDash();
     if(id === 'vJor') renderJor();
 }
 
 function askPin(id) {
     let w = W.find(x => x.id === id);
-    let p = prompt(`Introduce PIN para ${w.n}`);
-    if(p === w.pin) {
-        P = w;
-        if(w.admin) sw('vDash');
-        else sw('vJor');
-    } else {
-        alert('PIN Incorrecto');
-    }
+    let p = prompt(`PIN para ${w.n}`);
+    if(p === null) return;
+    if(p === w.pin) { P = w; sw(w.admin ? 'vDash' : 'vJor'); }
+    else { alert('Incorrecto'); P = null; }
 }
 
-function goBack() { sw(P.admin ? 'vDash' : 'vJor'); }
+function openForm() {
+    document.getElementById('inCli').value = '';
+    document.getElementById('inPro').value = '';
+    document.getElementById('inDes').value = '';
+    selT = null; renderTypes(); sw('vFrm');
+}
 
-// --- LOGICA ---
+function goBack() { if(!P) return sw('vSel'); sw(P.admin ? 'vDash' : 'vJor'); }
+
 function calcH() {
     let i = document.getElementById('inIni').value.split(':');
     let f = document.getElementById('inFin').value.split(':');
     let h = (parseInt(f[0]) + parseInt(f[1])/60) - (parseInt(i[0]) + parseInt(i[1])/60);
-    document.getElementById('lblHoras').innerText = h.toFixed(1);
+    if(h < 0) h += 24;
+    document.getElementById('lblHoras').innerText = Math.max(0, h).toFixed(1);
 }
 
 function saveE() {
-    if(!selT) return alert('Selecciona tipo de trabajo');
+    if(!selT) return alert('Selecciona tipo');
     let d = {
-        id: Date.now(),
-        fecha: new Date().toISOString().split('T')[0],
-        worker_id: P.id,
-        nombre: P.n,
-        cliente: document.getElementById('inCli').value,
-        proyecto: document.getElementById('inPro').value,
-        tipo: selT,
-        inicio: document.getElementById('inIni').value,
-        fin: document.getElementById('inFin').value,
+        id: Date.now(), fecha: new Date().toISOString().split('T')[0],
+        worker_id: P.id, nombre: P.n, cliente: document.getElementById('inCli').value,
+        proyecto: document.getElementById('inPro').value, tipo: selT,
+        inicio: document.getElementById('inIni').value, fin: document.getElementById('inFin').value,
         horas: parseFloat(document.getElementById('lblHoras').innerText),
-        descripcion: document.getElementById('inDes').value,
-        material: '', maquinaria: '', obs: '',
-        timestamp: new Date().toISOString(),
-        sy: false
+        descripcion: document.getElementById('inDes').value, timestamp: new Date().toISOString(), sy: false
     };
-    partes.push(d);
-    localStorage.setItem('pt_p', JSON.stringify(partes));
-    sendToSheets(d);
-    sw('vJor');
+    partes.push(d); localStorage.setItem('pt_p', JSON.stringify(partes));
+    sendToSheets(d); populateDL(); sw('vJor');
 }
 
 function sendToSheets(data) {
     if(!gsUrl) return;
-    updateStatus('Sincronizando...', 'sync');
-    fetch(gsUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: JSON.stringify({ action: 'saveParte', data: data })
-    }).then(() => {
-        data.sy = true;
-        localStorage.setItem('pt_p', JSON.stringify(partes));
-        updateStatus();
-    }).catch(e => {
-        console.error(e);
-        updateStatus();
-    });
+    updateStatus('Sync...', 'sync');
+    fetch(gsUrl, { method:'POST', mode:'no-cors', body:JSON.stringify({action:'saveParte', data:data}) })
+    .then(() => { data.sy = true; localStorage.setItem('pt_p', JSON.stringify(partes)); updateStatus(); })
+    .catch(() => updateStatus());
 }
 
 function syncAll() {
-    if(!gsUrl) return alert('Configura la URL en Admin');
-    updateStatus('Cargando datos...', 'sync');
-    // Descarga partes para el Dashboard (doGet)
+    if(!gsUrl) return alert('Falta URL');
+    updateStatus('Cargando...', 'sync');
     fetch(`${gsUrl}?action=getPartes`)
-    .then(r => r.json())
-    .then(res => {
-        if(res.status === 'ok') {
-            partes = res.partes;
-            localStorage.setItem('pt_p', JSON.stringify(partes));
-            renderDash();
-            updateStatus('OK', 'ok');
-        }
+    .then(r => r.json()).then(res => {
+        if(res.status === 'ok') { partes = res.partes; localStorage.setItem('pt_p', JSON.stringify(partes)); renderDash(); populateDL(); updateStatus('OK', 'ok'); }
     }).catch(() => updateStatus('Error', 'err'));
 }
 
-function updateStatus(msg, cls) {
-    let b = document.getElementById('statusBadge');
-    let p = partes.filter(x => !x.sy).length;
-    b.className = 'badge ' + (cls || '');
-    b.innerText = msg || (p > 0 ? `${p} pend.` : 'OK');
+function populateDL() {
+    let cl = [...new Set(partes.map(p => p.cliente).filter(Boolean))];
+    let pr = [...new Set(partes.map(p => p.proyecto).filter(Boolean))];
+    document.getElementById('dlCli').innerHTML = cl.map(c => `<option value="${c}">`).join('');
+    document.getElementById('dlPro').innerHTML = pr.map(p => `<option value="${p}">`).join('');
 }
 
-// --- DASHBOARD ---
 function renderDash() {
-    let hTotal = 0;
-    let wData = {};
-    let cData = {};
+    let hoy = new Date().toISOString().split('T')[0];
+    let pDay = partes.filter(p => p.fecha === hoy);
+    let hT = 0; let wD = {}; let cD = {};
+    pDay.forEach(p => {
+        hT += p.horas; wD[p.nombre] = (wD[p.nombre] || 0) + p.horas;
 
-    partes.forEach(p => {
-        hTotal += p.horas;
-        wData[p.nombre] = (wData[p.nombre] || 0) + p.horas;
-
-        cData[p.cliente || 'Otros'] = (cData[p.cliente || 'Otros'] || 0) + p.horas;
+        cD[p.cliente || 'Otros'] = (cD[p.cliente || 'Otros'] || 0) + p.horas;
     });
-
-    document.getElementById('stHoras').innerText = hTotal.toFixed(1);
-    document.getElementById('stPartes').innerText = partes.length;
-
-    renderBarChart('chartWorkers', wData);
-    renderBarChart('chartClients', cData);
+    document.getElementById('stHoras').innerText = hT.toFixed(1);
+    document.getElementById('stPartes').innerText = pDay.length;
+    renderBar('chartWorkers', wD); renderBar('chartClients', cD);
 }
 
-function renderBarChart(divId, data) {
-    let h = '';
-    let max = Math.max(...Object.values(data), 1);
-    for (let key in data) {
-        let pct = (data[key] / max) * 100;
-        h += `<div class="bar-container">
-            <div class="bar-label"><span>${key}</span><span>${data[key].toFixed(1)}h</span></div>
-            <div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div>
-        </div>`;
-    }
-    document.getElementById(divId).innerHTML = h;
+function renderBar(id, data) {
+    let m = Math.max(...Object.values(data), 1);
+    document.getElementById(id).innerHTML = Object.entries(data).map(([k,v]) => `
+        <div class="bar-container">
+            <div class="bar-label"><span>${k}</span><span>${v.toFixed(1)}h</span></div>
+            <div class="bar-bg"><div class="bar-fill" style="width:${(v/m)*100}%"></div></div>
+        </div>`).join('');
 }
 
 function renderJor() {
+    if(!P) return;
     let hoy = new Date().toISOString().split('T')[0];
     let p = partes.filter(x => x.fecha === hoy && x.worker_id === P.id);
-    let h = '';
-    p.forEach(x => {
-        h += `<div class="card" style="border-left: 4px solid var(--acc)">
+    document.getElementById('jorList').innerHTML = p.map(x => `
+        <div class="card" style="border-left:4px solid var(--acc)">
             <div style="display:flex; justify-content:space-between"><b>${x.tipo}</b> <span>${x.horas}h</span></div>
-            <div style="font-size:12px; color:var(--txt-dim)">${x.cliente} | ${x.proyecto}</div>
-        </div>`;
-    });
-    document.getElementById('jorList').innerHTML = h || '<p style="color:var(--txt-dim)">No hay entradas hoy.</p>';
-    document.getElementById('jorHeader').innerHTML = `<h3>Hola, ${P.n}</h3><p>Has registrado ${p.reduce((s,x)=>s+x.horas,0)}h hoy.</p>`;
+            <div style="font-size:11px; color:var(--txt-dim)">${x.cliente} | ${x.proyecto}</div>
+        </div>`).join('') || '<p>Sin entradas hoy.</p>';
+    document.getElementById('jorHeader').innerHTML = `<h3>${P.n}</h3><p>${p.reduce((s,x)=>s+x.horas,0).toFixed(1)}h hoy</p>`;
 }
 
-function saveUrl() {
-    gsUrl = document.getElementById('inUrl').value;
-    localStorage.setItem('gs_url', gsUrl);
-    alert('URL Guardada');
+function updateStatus(m, c) {
+    let b = document.getElementById('statusBadge');
+    let p = partes.filter(x => !x.sy).length;
+    b.className = 'badge ' + (c || '');
+    b.innerText = m || (p > 0 ? `${p} pend.` : 'OK');
 }
 
-function clearLocal() {
-    if(confirm('¿Borrar todos los datos locales?')) {
-        localStorage.clear();
-        location.reload();
-    }
-}
+function saveUrl() { localStorage.setItem('gs_url', document.getElementById('inUrl').value); alert('Guardado'); location.reload(); }
+function clearLocal() { if(confirm('¿Resetear todo?')) { localStorage.clear(); location.reload(); } }
 
 init();
 </script>

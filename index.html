@@ -3,162 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Partes Strongforms v3.1</title>
+    <title>Partes Strongforms — Contraste Alto</title>
     <link rel="stylesheet" href="[link removed]">
     <style>
         :root {
-            --bg: #0C0F15;
-            --card: #161B22;
-            --acc: #E8740C;
-            --acc-low: rgba(232, 116, 12, 0.2);
-            --txt: #FFFFFF;
-            --txt-dim: #8B949E;
-            --err: #F85149;
-            --ok: #3FB950;
+            --bg: #FFFFFF; /* Fondo Blanco */
+            --card: #F2F2F2; /* Gris muy claro para tarjetas */
+            --acc: #D35400; /* Naranja más oscuro para mejor contraste */
+            --txt: #000000; /* Texto Negro */
+            --txt-dim: #333333; /* Texto gris oscuro */
+            --border: #000000; /* Bordes negros */
+            --err: #CC0000;
+            --ok: #006600;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { 
-            margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: var(--bg); color: var(--txt); line-height: 1.5; overflow-x: hidden;
+            margin: 0; font-family: Arial, sans-serif;
+            background: var(--bg); color: var(--txt); line-height: 1.5;
         }
         header {
-            padding: 15px; background: var(--card); border-bottom: 1px solid #30363d;
-            display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100;
+            padding: 15px; background: #000000; color: #FFFFFF;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .badge { font-size: 11px; padding: 4px 8px; border-radius: 12px; background: #30363d; color: var(--txt-dim); }
-        .badge.ok { background: var(--ok); color: white; }
-        .badge.sync { background: var(--acc); color: white; }
+        .badge { font-size: 12px; padding: 4px 10px; border-radius: 4px; background: #333; color: white; font-weight: bold; }
+        .badge.ok { background: var(--ok); }
+        .badge.sync { background: var(--acc); }
 
         main { padding: 15px; padding-bottom: 80px; max-width: 600px; margin: 0 auto; }
         .pg { display: none; }
         .pg.active { display: block; }
 
-        .card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #30363d; }
-        h2 { margin: 0 0 15px 0; font-size: 18px; color: var(--acc); }
+        .card { background: var(--card); border: 2px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+        h2 { margin: 0 0 15px 0; font-size: 22px; color: #000; text-transform: uppercase; border-bottom: 2px solid #000; }
 
         .grid-w { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .btn-w { 
-            padding: 20px; border-radius: 12px; border: none; background: var(--card); color: white;
-            display: flex; flex-direction: column; align-items: center; cursor: pointer; border: 1px solid #30363d;
+            padding: 15px; border-radius: 8px; border: 2px solid var(--border); background: #FFF; color: #000;
+            display: flex; flex-direction: column; align-items: center; cursor: pointer; font-weight: bold; font-size: 16px;
         }
-        .ini { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 8px; }
+        .ini { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; margin-bottom: 8px; font-size: 18px; border: 1px solid #000; }
 
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #000; }
         input, select, textarea {
-            width: 100%; padding: 12px; background: #0d1117; border: 1px solid #30363d;
-            color: white; border-radius: 8px; margin-bottom: 10px; font-size: 16px;
+            width: 100%; padding: 15px; background: #FFF; border: 2px solid var(--border);
+            color: #000; border-radius: 4px; margin-bottom: 15px; font-size: 18px;
         }
-        .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
-        .chip { padding: 8px 12px; background: #30363d; border-radius: 20px; font-size: 13px; cursor: pointer; }
-        .chip.active { background: var(--acc); }
+        .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+        .chip { padding: 12px 15px; background: #DDD; border: 1px solid #000; border-radius: 4px; font-size: 14px; color: #000; font-weight: bold; }
+        .chip.active { background: var(--acc); color: white; }
 
         nav {
-            position: fixed; bottom: 0; width: 100%; background: var(--card);
-            border-top: 1px solid #30363d; display: flex; justify-content: space-around; padding: 10px 0;
+            position: fixed; bottom: 0; width: 100%; background: #000;
+            display: flex; justify-content: space-around; padding: 10px 0;
         }
-        nav button { background: none; border: none; color: var(--txt-dim); display: flex; flex-direction: column; align-items: center; font-size: 11px; }
-        nav button.active { color: var(--acc); }
-        nav button i { font-size: 20px; margin-bottom: 4px; }
+        nav button { background: none; border: none; color: #BBB; display: flex; flex-direction: column; align-items: center; font-size: 12px; font-weight: bold; }
+        nav button.active { color: #FFF; }
+        nav button i { font-size: 24px; margin-bottom: 2px; }
 
-        .btn-main { width: 100%; padding: 15px; background: var(--acc); border: none; color: white; font-weight: bold; border-radius: 8px; font-size: 16px; cursor: pointer; margin-bottom: 10px;}
-        
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .stat-card { background: #0d1117; padding: 10px; border-radius: 8px; text-align: center; }
-        .stat-val { font-size: 20px; font-weight: bold; color: var(--acc); }
-        .stat-lbl { font-size: 11px; color: var(--txt-dim); text-transform: uppercase; }
-        .bar-container { margin-bottom: 10px; }
-        .bar-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
-        .bar-bg { background: #30363d; height: 8px; border-radius: 4px; overflow: hidden; }
-        .bar-fill { height: 100%; background: var(--acc); }
+        .btn-main { width: 100%; padding: 18px; background: #000; border: none; color: #FFF; font-weight: bold; border-radius: 4px; font-size: 18px; cursor: pointer; border: 2px solid #000; }
+        .btn-sec { background: #FFF; color: #000; border: 2px solid #000; margin-top: 10px; }
+
+        /* Modal PIN */
+        #modalPin {
+            position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8);
+            display:none; align-items:center; justify-content:center; z-index: 1000;
+        }
+        .pin-box { background: #FFF; padding: 30px; border-radius: 8px; width: 90%; max-width: 400px; text-align:center; }
     </style>
 </head>
 <body>
 
 <header>
-    <div style="font-weight: bold; font-size: 18px;">Strongforms <span style="color: var(--acc)">Taller</span></div>
-    <div id="statusBadge" class="badge">Local</div>
+    <div style="font-weight: bold; font-size: 20px;">STRONGFORMS</div>
+    <div id="statusBadge" class="badge">CONECTANDO...</div>
 </header>
 
 <main>
+    <!-- 1. SELECCION TRABAJADOR -->
     <div id="vSel" class="pg active">
-        <h2 style="text-align: center;">¿Quién entra el parte?</h2>
+        <h2 style="text-align: center;">SELECCIONA TU NOMBRE</h2>
         <div id="workerGrid" class="grid-w"></div>
     </div>
 
+    <!-- 2. JORNADA -->
     <div id="vJor" class="pg">
         <div id="jorHeader" class="card"></div>
-        <button class="btn-main" onclick="openForm()"><i class="fa fa-plus"></i> Añadir entrada today</button>
-        <h3 style="margin-top: 20px;">Entradas de hoy</h3>
+        <button class="btn-main" onclick="openForm()"><i class="fa fa-plus"></i> NUEVA ENTRADA</button>
+        <h3 style="margin-top: 20px; border-bottom: 2px solid #000;">ENTRADAS DE HOY</h3>
         <div id="jorList"></div>
     </div>
 
+    <!-- 3. DASHBOARD -->
     <div id="vDash" class="pg">
-        <h2>Dashboard Hoy</h2>
-        <div class="stat-grid">
-            <div class="stat-card"><div id="stHoras" class="stat-val">0</div><div class="stat-lbl">Horas Hoy</div></div>
-            <div class="stat-card"><div id="stPartes" class="stat-val">0</div><div class="stat-lbl">Partes Hoy</div></div>
+        <h2>ESTADÍSTICAS HOY</h2>
+        <div class="card" style="display: flex; justify-content: space-around; text-align: center;">
+            <div><div id="stHoras" style="font-size: 24px; font-weight: bold;">0</div><div style="font-size: 12px;">HORAS</div></div>
+            <div><div id="stPartes" style="font-size: 24px; font-weight: bold;">0</div><div style="font-size: 12px;">PARTES</div></div>
         </div>
         <div class="card">
-            <h3>Horas por Trabajador</h3>
+            <h3>HORAS / TRABAJADOR</h3>
             <div id="chartWorkers"></div>
         </div>
         <div class="card">
-            <h3>Horas por Cliente</h3>
-            <div id="chartClients"></div>
-        </div>
-        <div style="display: flex; gap: 10px;">
-            <button class="btn-main" style="background: #30363d;" onclick="sw('pgAdmin')">Ajustes</button>
-            <button class="btn-main" onclick="syncAll()">Sync Datos</button>
+            <button class="btn-main" onclick="syncAll()">SINCRONIZAR DATOS</button>
+            <button class="btn-main btn-sec" onclick="sw('pgAdmin')">AJUSTES</button>
         </div>
     </div>
 
+    <!-- 4. FORMULARIO -->
     <div id="vFrm" class="pg">
-        <h2 id="frmTitle">Nueva Entrada</h2>
+        <h2>NUEVO PARTE</h2>
         <div class="card">
-            <label>Tipo de trabajo</label>
+            <label>TIPO DE TRABAJO</label>
             <div id="chipTypes" class="chips"></div>
             
-            <label>Cliente</label>
-            <input type="text" id="inCli" list="dlCli" placeholder="Cliente...">
+            <label>CLIENTE</label>
+            <input type="text" id="inCli" list="dlCli" placeholder="Escribe cliente...">
             <datalist id="dlCli"></datalist>
 
-            <label>Proyecto</label>
-            <input type="text" id="inPro" list="dlPro" placeholder="Proyecto...">
+            <label>PROYECTO</label>
+            <input type="text" id="inPro" list="dlPro" placeholder="Escribe proyecto...">
             <datalist id="dlPro"></datalist>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div><label>Inicio</label><input type="time" id="inIni" value="06:00" onchange="calcH()"></div>
-                <div><label>Fin</label><input type="time" id="inFin" value="14:00" onchange="calcH()"></div>
+                <div><label>INICIO</label><input type="time" id="inIni" value="06:00" onchange="calcH()"></div>
+                <div><label>FIN</label><input type="time" id="inFin" value="14:00" onchange="calcH()"></div>
             </div>
 
-            <label>Horas: <span id="lblHoras" style="font-weight: bold; color: var(--acc);">8.0</span></label>
-            <label>Descripción</label>
-            <textarea id="inDes" rows="3" placeholder="Descripción del trabajo..."></textarea>
+            <p style="font-size: 20px; text-align: center;">TOTAL: <span id="lblHoras" style="font-weight: bold; color: var(--acc);">8.0</span> HORAS</p>
             
-            <button class="btn-main" onclick="saveE()">GUARDAR PARTE</button>
-            <button class="btn-main" style="background: transparent; border: 1px solid #30363d; color: var(--txt-dim);" onclick="goBack()">Cancelar</button>
+            <label>DESCRIPCIÓN</label>
+            <textarea id="inDes" rows="3"></textarea>
+            
+            <button class="btn-main" onclick="saveE()">GUARDAR AHORA</button>
+            <button class="btn-main btn-sec" onclick="goBack()">VOLVER</button>
         </div>
     </div>
 
+    <!-- 5. ADMIN -->
     <div id="pgAdmin" class="pg">
-        <h2>Ajustes</h2>
+        <h2>CONFIGURACIÓN</h2>
         <div class="card">
-            <label>URL Google Apps Script</label>
-            <input type="text" id="inUrl" placeholder="[link removed]">
-            <button class="btn-main" onclick="saveUrl()">Guardar Config</button>
+            <label>URL GOOGLE SCRIPT</label>
+            <input type="text" id="inUrl">
+            <button class="btn-main" onclick="saveUrl()">GUARDAR URL</button>
         </div>
         <div class="card">
-            <button class="btn-main" style="background: #F85149;" onclick="clearLocal()">RESET APP</button>
+            <button class="btn-main" style="background: #CC0000;" onclick="clearLocal()">BORRAR TODO</button>
         </div>
     </div>
 </main>
 
 <nav id="navBar" style="display: none;">
-    <button onclick="sw('vSel')" id="nHome"><i class="fa fa-home"></i>Inicio</button>
-    <button onclick="sw('vJor')" id="nJor"><i class="fa fa-calendar-day"></i>Hoy</button>
-    <button onclick="sw('vDash')" id="nDash"><i class="fa fa-chart-bar"></i>Admin</button>
+    <button onclick="sw('vSel')" id="nHome"><i class="fa fa-users"></i>EQUIPO</button>
+    <button onclick="sw('vJor')" id="nJor"><i class="fa fa-clock"></i>HOY</button>
+    <button onclick="sw('vDash')" id="nDash"><i class="fa fa-chart-pie"></i>DASH</button>
 </nav>
 
+<!-- MODAL PARA PIN -->
+<div id="modalPin">
+    <div class="pin-box">
+        <h3 id="pinName" style="margin-top:0">NOMBRE</h3>
+        <label>INTRODUCE TU PIN</label>
+        <input type="password" id="pinInput" pattern="[0-9]*" inputmode="numeric" style="text-align:center; font-size:30px">
+        <button class="btn-main" onclick="checkPin()">ENTRAR</button>
+        <button class="btn-main btn-sec" onclick="closePin()">CANCELAR</button>
+    </div>
+</div>
+
 <script>
+// --- CONFIGURACIÓN ---
 var W = [
   {id:1, n:'Andres', ini:'AN', c:'#E8740C', pin:'dres', admin:false},
   {id:2, n:'Ramon', ini:'RA', c:'#059669', pin:'amon', admin:false},
@@ -179,7 +193,7 @@ var TT = [
   {id:'09_otros', n:'Otros', i:'fa-ellipsis-h'}
 ];
 
-var P = null; var selT = null;
+var P = null; var selT = null; var tempW = null;
 var gsUrl = localStorage.getItem('gs_url') || '';
 var partes = JSON.parse(localStorage.getItem('pt_p')) || [];
 
@@ -191,21 +205,32 @@ function init() {
 
 function renderWorkers() {
     document.getElementById('workerGrid').innerHTML = W.map(w => `
-        <button class="btn-w" onclick="askPin(${w.id})">
+        <button class="btn-w" onclick="openPin(${w.id})">
             <div class="ini" style="background:${w.c}">${w.ini}</div>
             <div>${w.n}</div>
         </button>`).join('');
 }
 
-function renderTypes() {
-    document.getElementById('chipTypes').innerHTML = TT.map(t => `
-        <div class="chip ${selT===t.n?'active':''}" onclick="setT('${t.id}')"><i class="fa ${t.i}"></i> ${t.n}</div>`).join('');
+function openPin(id) {
+    tempW = W.find(x => x.id === id);
+    document.getElementById('pinName').innerText = tempW.n;
+    document.getElementById('pinInput').value = '';
+    document.getElementById('modalPin').style.display = 'flex';
+    document.getElementById('pinInput').focus();
 }
 
-function setT(id) {
-    selT = TT.find(x => x.id === id).n;
-    renderTypes();
+function checkPin() {
+    let p = document.getElementById('pinInput').value;
+    if(p === tempW.pin) {
+        P = tempW;
+        closePin();
+        sw(P.admin ? 'vDash' : 'vJor');
+    } else {
+        alert('PIN INCORRECTO');
+    }
 }
+
+function closePin() { document.getElementById('modalPin').style.display = 'none'; }
 
 function sw(id) {
     document.querySelectorAll('.pg').forEach(p => p.classList.remove('active'));
@@ -215,113 +240,88 @@ function sw(id) {
     if(id === 'vJor') renderJor();
 }
 
-function askPin(id) {
-    let w = W.find(x => x.id === id);
-    let p = prompt(`PIN para ${w.n}`);
-    if(p === null) return;
-    if(p === w.pin) { P = w; sw(w.admin ? 'vDash' : 'vJor'); }
-    else { alert('Incorrecto'); P = null; }
-}
-
-function openForm() {
-    document.getElementById('inCli').value = '';
-    document.getElementById('inPro').value = '';
-    document.getElementById('inDes').value = '';
-    selT = null; renderTypes(); sw('vFrm');
-}
-
-function goBack() { if(!P) return sw('vSel'); sw(P.admin ? 'vDash' : 'vJor'); }
+function openForm() { selT = null; renderTypes(); sw('vFrm'); }
+function goBack() { sw(P.admin ? 'vDash' : 'vJor'); }
 
 function calcH() {
     let i = document.getElementById('inIni').value.split(':');
     let f = document.getElementById('inFin').value.split(':');
     let h = (parseInt(f[0]) + parseInt(f[1])/60) - (parseInt(i[0]) + parseInt(i[1])/60);
     if(h < 0) h += 24;
-    document.getElementById('lblHoras').innerText = Math.max(0, h).toFixed(1);
+    document.getElementById('lblHoras').innerText = h.toFixed(1);
+}
+
+function renderTypes() {
+    document.getElementById('chipTypes').innerHTML = TT.map(t => `
+        <div class="chip ${selT===t.n?'active':''}" onclick="selT='${t.n}';renderTypes()"><i class="fa ${t.i}"></i> ${t.n}</div>`).join('');
 }
 
 function saveE() {
-    if(!selT) return alert('Selecciona tipo');
+    if(!selT) return alert('SELECCIONA TIPO');
     let d = {
         id: Date.now(), fecha: new Date().toISOString().split('T')[0],
         worker_id: P.id, nombre: P.n, cliente: document.getElementById('inCli').value,
         proyecto: document.getElementById('inPro').value, tipo: selT,
         inicio: document.getElementById('inIni').value, fin: document.getElementById('inFin').value,
         horas: parseFloat(document.getElementById('lblHoras').innerText),
-        descripcion: document.getElementById('inDes').value, timestamp: new Date().toISOString(), sy: false
+        descripcion: document.getElementById('inDes').value, sy: false
     };
     partes.push(d); localStorage.setItem('pt_p', JSON.stringify(partes));
-    sendToSheets(d); populateDL(); sw('vJor');
-}
-
-function sendToSheets(data) {
-    if(!gsUrl) return;
-    updateStatus('Sync...', 'sync');
-    fetch(gsUrl, { method:'POST', mode:'no-cors', body:JSON.stringify({action:'saveParte', data:data}) })
-    .then(() => { data.sy = true; localStorage.setItem('pt_p', JSON.stringify(partes)); updateStatus(); })
-    .catch(() => updateStatus());
+    if(gsUrl) fetch(gsUrl, { method:'POST', mode:'no-cors', body:JSON.stringify({action:'saveParte', data:d}) });
+    alert('GUARDADO'); sw('vJor');
 }
 
 function syncAll() {
-    if(!gsUrl) return alert('Falta URL');
-    updateStatus('Cargando...', 'sync');
-    fetch(`${gsUrl}?action=getPartes`)
-    .then(r => r.json()).then(res => {
-        if(res.status === 'ok') { partes = res.partes; localStorage.setItem('pt_p', JSON.stringify(partes)); renderDash(); populateDL(); updateStatus('OK', 'ok'); }
-    }).catch(() => updateStatus('Error', 'err'));
-}
-
-function populateDL() {
-    let cl = [...new Set(partes.map(p => p.cliente).filter(Boolean))];
-    let pr = [...new Set(partes.map(p => p.proyecto).filter(Boolean))];
-    document.getElementById('dlCli').innerHTML = cl.map(c => `<option value="${c}">`).join('');
-    document.getElementById('dlPro').innerHTML = pr.map(p => `<option value="${p}">`).join('');
+    if(!gsUrl) return alert('CONFIGURA URL');
+    updateStatus('SYNC...', 'sync');
+    fetch(`${gsUrl}?action=getPartes`).then(r => r.json()).then(res => {
+        if(res.status === 'ok') { partes = res.partes; localStorage.setItem('pt_p', JSON.stringify(partes)); renderDash(); updateStatus('OK', 'ok'); }
+    }).catch(() => updateStatus('ERROR', 'err'));
 }
 
 function renderDash() {
     let hoy = new Date().toISOString().split('T')[0];
     let pDay = partes.filter(p => p.fecha === hoy);
-    let hT = 0; let wD = {}; let cD = {};
+    let hT = 0; let wD = {};
     pDay.forEach(p => {
         hT += p.horas; wD[p.nombre] = (wD[p.nombre] || 0) + p.horas;
-
-        cD[p.cliente || 'Otros'] = (cD[p.cliente || 'Otros'] || 0) + p.horas;
     });
     document.getElementById('stHoras').innerText = hT.toFixed(1);
     document.getElementById('stPartes').innerText = pDay.length;
-    renderBar('chartWorkers', wD); renderBar('chartClients', cD);
-}
-
-function renderBar(id, data) {
-    let m = Math.max(...Object.values(data), 1);
-    document.getElementById(id).innerHTML = Object.entries(data).map(([k,v]) => `
-        <div class="bar-container">
-            <div class="bar-label"><span>${k}</span><span>${v.toFixed(1)}h</span></div>
-            <div class="bar-bg"><div class="bar-fill" style="width:${(v/m)*100}%"></div></div>
-        </div>`).join('');
+    let h = ''; let m = Math.max(...Object.values(wD), 1);
+    for(let k in wD) {
+        h += `<div style="margin-bottom:10px">
+            <div style="display:flex; justify-content:space-between; font-size:14px"><b>${k}</b> <span>${wD[k]}h</span></div>
+            <div style="background:#DDD; height:10px; border-radius:5px"><div style="background:var(--acc); height:100%; width:${(wD[k]/m)*100}%"></div></div>
+        </div>`;
+    }
+    document.getElementById('chartWorkers').innerHTML = h || '<p>Sin datos hoy</p>';
 }
 
 function renderJor() {
-    if(!P) return;
     let hoy = new Date().toISOString().split('T')[0];
     let p = partes.filter(x => x.fecha === hoy && x.worker_id === P.id);
     document.getElementById('jorList').innerHTML = p.map(x => `
-        <div class="card" style="border-left:4px solid var(--acc)">
+        <div class="card">
             <div style="display:flex; justify-content:space-between"><b>${x.tipo}</b> <span>${x.horas}h</span></div>
-            <div style="font-size:11px; color:var(--txt-dim)">${x.cliente} | ${x.proyecto}</div>
-        </div>`).join('') || '<p>Sin entradas hoy.</p>';
-    document.getElementById('jorHeader').innerHTML = `<h3>${P.n}</h3><p>${p.reduce((s,x)=>s+x.horas,0).toFixed(1)}h hoy</p>`;
+            <div style="font-size:13px">${x.cliente} | ${x.proyecto}</div>
+        </div>`).join('') || '<p>No has entrado nada hoy.</p>';
+    document.getElementById('jorHeader').innerHTML = `<h3 style="margin:0">${P.n}</h3><p style="margin:0">${p.reduce((s,x)=>s+x.horas,0).toFixed(1)}h registradas hoy</p>`;
+}
+
+function populateDL() {
+    let cl = [...new Set(partes.map(p => p.cliente).filter(Boolean))];
+    document.getElementById('dlCli').innerHTML = cl.map(c => `<option value="${c}">`).join('');
 }
 
 function updateStatus(m, c) {
     let b = document.getElementById('statusBadge');
-    let p = partes.filter(x => !x.sy).length;
     b.className = 'badge ' + (c || '');
-    b.innerText = m || (p > 0 ? `${p} pend.` : 'OK');
+    b.innerText = m || 'ONLINE';
 }
 
-function saveUrl() { localStorage.setItem('gs_url', document.getElementById('inUrl').value); alert('Guardado'); location.reload(); }
-function clearLocal() { if(confirm('¿Resetear todo?')) { localStorage.clear(); location.reload(); } }
+function saveUrl() { localStorage.setItem('gs_url', document.getElementById('inUrl').value); alert('GUARDADO'); location.reload(); }
+function clearLocal() { if(confirm('¿BORRAR TODO?')) { localStorage.clear(); location.reload(); } }
 
 init();
 </script>

@@ -532,8 +532,8 @@ var W_DEF = [
   {id:5,n:'Abdoulie',  ini:'AB',c:'#D97706',pin:'ulie', admin:false},
   {id:6,n:'Alieu',     ini:'AI',c:'#BE185D',pin:'lieu', admin:false},
   {id:7,n:'Ismael',    ini:'IS',c:'#4F46E5',pin:'mael', admin:false},
-  {id:9,n:'Fernando',  ini:'FE',c:'#0F766E',pin:'ando', admin:false, jefe:true},
-  {id:8,n:'Sergio',    ini:'SE',c:'#DC2626',pin:'7777', admin:true}
+  {id:8,n:'Fernando',  ini:'FE',c:'#0F766E',pin:'ando', admin:false, jefe:true},
+  {id:9,n:'Sergio',    ini:'SE',c:'#DC2626',pin:'7777', admin:true}
 ];
  
 /* ============================================================
@@ -1212,14 +1212,24 @@ function syncConfig(manual){
       /* Trabajadores */
       if(d.trabajadores&&d.trabajadores.length){
         var wNew=d.trabajadores.map(function(t){
+          var rolRaw=(t.rol||'').toLowerCase().trim();
           return{id:parseInt(t.id)||t.id,n:t.nombre,ini:t.iniciales,
             c:t.color||'#888',pin:String(t.pin),
-            admin:t.rol==='admin',jefe:t.rol==='jefe'};
+            admin:rolRaw==='admin',
+            jefe:rolRaw==='jefe'||rolRaw.indexOf('jefe')>=0};
         });
-        /* Fusionar: mantener W_DEF hardcoded + añadir los de Sheets */
+        /* Fusionar: W_DEF es autoritativo para admin/jefe/pin/color */
         W_DEF.forEach(function(wd){
           var enSheets=wNew.find(function(x){return String(x.id)===String(wd.id);});
-          if(!enSheets) wNew.push(JSON.parse(JSON.stringify(wd)));
+          if(!enSheets){
+            wNew.push(JSON.parse(JSON.stringify(wd)));
+          } else {
+            /* Preservar campos críticos del W_DEF hardcoded */
+            enSheets.admin=wd.admin;
+            enSheets.jefe=wd.jefe||false;
+            enSheets.pin=wd.pin;
+            if(wd.c) enSheets.c=wd.c;
+          }
         });
         /* Sergio siempre admin y al final */
         W=wNew.sort(function(a,b){

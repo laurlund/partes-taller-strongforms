@@ -64,6 +64,12 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
 .wb:active{border-color:var(--acc);transform:scale(.97)}
 .wb.adm-btn{border-color:rgba(220,38,38,.4);background:#FFF5F5}
 .wb.adm-btn .wr{color:var(--err)}
+.wb.jefe-btn{border-color:rgba(15,118,110,.4);background:#F0FDFA}
+.wb.jefe-btn .wr{color:#0F766E}
+/* Ausencia badge en tarjetas */
+.ec.ausencia{background:#FFF1F2}
+.ec.ausencia::before{background:#DC2626}
+.ec .aus-tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;background:#FEE2E2;color:#DC2626;border:1px solid #FECACA;margin-left:4px}
  
 /* PIN OVERLAY */
 .pov{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center}
@@ -269,6 +275,10 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
    <div class="sec"><i class="fas fa-wrench"></i> Por tipo de trabajo</div><div id="dByT" class="bylist"></div>
    <div class="sec"><i class="fas fa-table"></i> Pivot: Cliente × Tipo</div>
    <div class="card" style="padding:4px"><div class="pvt-wrap" id="dPvt"></div></div>
+   <div class="sec"><i class="fas fa-bolt" style="color:var(--acc2)"></i> Horas Extra por trabajador</div>
+   <div id="dHX" class="bylist"></div>
+   <div class="sec"><i class="fas fa-user-slash" style="color:var(--err)"></i> Ausencias por trabajador</div>
+   <div id="dAus" class="bylist"></div>
    <div class="sec"><i class="fas fa-download"></i> Exportar</div>
    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
     <button class="bt bt2 bts" onclick="dlCSV()" style="flex:1"><i class="fas fa-file-csv"></i> CSV</button>
@@ -283,25 +293,79 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
    <div class="tcg" id="tcG"></div>
    <div class="sec"><i class="fas fa-building"></i> Cliente / Proyecto</div>
    <div class="card"><div class="r2">
-    <div class="fld"><label>Cliente</label><input type="text" id="selC" list="dlCl" placeholder="Escribe..."><datalist id="dlCl"></datalist></div>
-    <div class="fld"><label>Proyecto</label><input type="text" id="selP" list="dlPr" placeholder="Escribe..."><datalist id="dlPr"></datalist></div>
+    <div class="fld"><label>Cliente</label><input type="text" id="selC" list="dlCl" placeholder="Escribe o elige..."><datalist id="dlCl"></datalist></div>
+    <div class="fld"><label>Proyecto</label><input type="text" id="selP" list="dlPr" placeholder="Escribe o elige..."><datalist id="dlPr"></datalist></div>
    </div></div>
+   <!-- Card especial: AUSENCIA -->
+   <div id="ausCard" style="display:none">
+    <div class="sec"><i class="fas fa-user-slash" style="color:var(--err)"></i> Motivo de ausencia</div>
+    <div class="card">
+     <div class="fld"><label>Tipo de ausencia</label>
+      <select id="ausMotivo">
+       <option value="">-- Selecciona motivo --</option>
+       <option value="Vacaciones">Vacaciones</option>
+       <option value="Enfermedad — justificante">Enfermedad — justificante</option>
+       <option value="Baja médica (IT)">Baja médica (IT)</option>
+       <option value="Asuntos propios">Asuntos propios</option>
+       <option value="Permiso no retribuido">Permiso no retribuido</option>
+       <option value="Otro (indicar en observaciones)">Otro — indicar en observaciones</option>
+      </select>
+     </div>
+     <div class="fld" style="margin-bottom:0"><label>Observaciones</label><textarea id="ausObs" placeholder="Detalles adicionales..." rows="2"></textarea></div>
+     <div style="margin-top:8px;padding:8px;background:#FEF2F2;border-radius:8px;font-size:10px;color:var(--err)"><i class="fas fa-info-circle"></i> Si es por enfermedad, recuerda traer el justificante médico.</div>
+    </div>
+    <button class="bt bt1" onclick="saveE()"><i class="fas fa-check"></i> Registrar ausencia</button>
+   </div>
+   <!-- Card especial: HORAS EXTRA -->
+   <div id="hxCard" style="display:none">
+    <div class="sec"><i class="fas fa-bolt" style="color:var(--acc2)"></i> Horas Extra — vincula a proyecto</div>
+    <div class="card">
+     <div style="padding:8px;background:#FFF7ED;border-radius:8px;font-size:10px;color:var(--acc);margin-bottom:8px"><i class="fas fa-info-circle"></i> Las horas extra deben vincularse a un proyecto o cliente arriba.</div>
+    </div>
+   </div>
+   <!-- Card horas (se oculta en Ausencia) -->
+   <div id="horasCard">
    <div class="sec"><i class="fas fa-clock"></i> Horas</div>
    <div class="card">
     <div class="r2">
-     <div class="fld"><label>Inicio</label><input type="time" id="eI" value="08:00" oninput="calcH()"></div>
-     <div class="fld"><label>Fin</label><input type="time" id="eF" value="12:00" oninput="calcH()"></div>
+     <div class="fld"><label>Inicio</label><input type="time" id="eI" value="06:00" oninput="calcH()"></div>
+     <div class="fld"><label>Fin</label><input type="time" id="eF" value="14:00" oninput="calcH()"></div>
     </div>
-    <div class="fld" style="margin-bottom:0"><label>Horas calculadas</label><input type="number" id="eH" min="0" max="24" step="0.5" value="4"></div>
+    <div class="fld" style="margin-bottom:0"><label>Horas calculadas</label><input type="number" id="eH" min="0" max="24" step="0.5" value="8"></div>
    </div>
+   </div>
+   <!-- Card detalle (se oculta en Ausencia) -->
+   <div id="detalleCard">
    <div class="sec"><i class="fas fa-pen"></i> Detalle</div>
    <div class="card">
     <div class="fld"><label>Descripción</label><div class="sbar" id="sD"></div><input type="text" id="eD" placeholder="Tarea realizada..." list="dlD"><datalist id="dlD"></datalist></div>
-    <div class="fld"><label>Material</label><div class="sbar" id="sM"></div><input type="text" id="eM" placeholder="Material..." list="dlM"><datalist id="dlM"></datalist></div>
-    <div class="fld"><label>Maquinaria</label><div class="sbar" id="sQ"></div><input type="text" id="eQ" placeholder="Equipo..." list="dlQ"><datalist id="dlQ"></datalist></div>
-    <div class="fld" style="margin-bottom:0"><label>Observaciones</label><textarea id="eO" placeholder="Notas..." rows="2"></textarea></div>
+    <div class="fld"><label>Material utilizado hoy</label><div class="sbar" id="sM"></div><input type="text" id="eM" placeholder="Material..." list="dlM"><datalist id="dlM"></datalist></div>
+    <div class="fld"><label>Maquinaria utilizada hoy</label><div class="sbar" id="sQ"></div><input type="text" id="eQ" placeholder="Equipo..." list="dlQ"><datalist id="dlQ"></datalist></div>
+    <div class="fld" style="margin-bottom:0"><label>Observaciones</label><div class="sbar" id="sO"></div><textarea id="eO" placeholder="Notas..." rows="2"></textarea></div>
+   </div>
+   <!-- Card producción -->
+   <div class="sec"><i class="fas fa-boxes"></i> Producción (opcional)</div>
+   <div class="card">
+    <div style="font-size:9px;color:var(--muted);margin-bottom:8px">Unidades terminadas en esta jornada</div>
+    <div class="r2">
+     <div class="fld" style="margin-bottom:0"><label>¿Qué has terminado tú hoy?</label>
+      <select id="ePU">
+       <option value="">-- Sin producción --</option>
+       <option>Encofrados estándar</option>
+       <option>Encofrados especiales</option>
+       <option>Jaulas</option>
+       <option>Perchas</option>
+       <option>Piezas especiales matricería (definir en notas)</option>
+       <option>Otros encargos (definir en notas)</option>
+      </select>
+     </div>
+     <div class="fld" style="margin-bottom:0"><label>Cantidad</label>
+      <input type="number" id="ePQ" min="0" step="1" placeholder="0" inputmode="numeric">
+     </div>
+    </div>
    </div>
    <button class="bt bt1" onclick="saveE()"><i class="fas fa-check"></i> Guardar entrada</button>
+   </div>
   </div>
  
  </div><!-- /pgNuevo -->
@@ -318,13 +382,14 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
  
  <!-- ===== HISTORIAL ===== -->
  <div class="pg" id="pgHist">
-  <div class="df">
-   <input type="date" id="hD">
-   <span style="color:var(--muted);font-size:10px">a</span>
-   <input type="date" id="hH">
-   <button class="bt bt2 bts" onclick="rHist()" style="width:auto;padding:7px 9px"><i class="fas fa-search"></i></button>
+  <div class="df" style="align-items:center;gap:6px">
+   <select id="hMes" style="flex:1;background:#fff;border:1.5px solid var(--bdr);border-radius:10px;padding:7px 8px;color:var(--fg);font-family:inherit;font-size:12px;font-weight:600" onchange="rHist()">
+    <option value="">Selecciona un mes...</option>
+   </select>
+   <button class="bt bt2 bts" onclick="rHist()" style="width:auto;padding:7px 10px"><i class="fas fa-sync"></i></button>
   </div>
-  <div class="sg2" id="sHist"></div>
+  <div id="hBanner" style="display:none;margin:6px 0;padding:8px 12px;border-radius:10px;font-size:10px;font-weight:700;border:1.5px solid;background:#FFF7ED;color:var(--acc);border-color:#FED7AA"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>
+  <div class="sg2" id="sHist" style="margin-top:8px"></div>
   <div id="lHist"></div>
  </div>
  
@@ -343,8 +408,10 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
     <div class="fld"><label>URL Web App</label><input type="url" id="gsU" placeholder="https://script.google.com/macros/s/.../exec" oninput="svS()"></div>
     <div style="display:flex;gap:4px">
      <button class="bt bt2 bts" onclick="tGS()" style="flex:1"><i class="fas fa-plug"></i> Probar</button>
-     <button class="bt bt2 bts" onclick="syAll()" style="flex:1"><i class="fas fa-sync"></i> Upload pendientes</button>
+     <button class="bt bt2 bts" onclick="syAll()" style="flex:1"><i class="fas fa-cloud-upload-alt"></i> Upload pendientes</button>
     </div>
+    <button class="bt bt1 bts" onclick="syncConfig(true)" style="width:100%;margin-top:6px"><i class="fas fa-cloud-download-alt"></i> Sincronizar config desde Sheets</button>
+    <p style="font-size:9px;color:var(--muted);margin-top:6px">Descarga trabajadores, tipos, clientes, proyectos y plantillas. Se aplica automáticamente al abrir la app.</p>
     <!-- INSTRUCCIONES REDESPLIEGUE -->
     <details style="margin-top:10px">
      <summary style="font-size:10px;color:var(--acc);cursor:pointer;font-weight:700"><i class="fas fa-exclamation-triangle"></i> Si el dashboard no carga datos de Sheets</summary>
@@ -412,6 +479,20 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
     </div>
    </div>
  
+   <div class="sec"><i class="fas fa-calendar-times"></i> Festivos y días especiales</div>
+   <div class="card">
+    <div style="font-size:9px;color:var(--muted);margin-bottom:8px">Las jornadas en estos días se contarán automáticamente como Horas Extra.</div>
+    <div id="lFest" style="margin-bottom:8px"></div>
+    <div class="aad">
+     <input type="date" id="nFest" style="flex:1">
+     <button class="bt bt1 bts" onclick="addFest()" style="width:auto;padding:6px 10px"><i class="fas fa-plus"></i></button>
+    </div>
+    <div style="display:flex;gap:4px;margin-top:6px">
+     <button class="bt bt2 bts" onclick="addFestivos2025()" style="flex:1;font-size:9px"><i class="fas fa-calendar"></i> Cargar festivos CV 2025</button>
+     <button class="bt bt2 bts" onclick="addFestivos2026()" style="flex:1;font-size:9px"><i class="fas fa-calendar"></i> Cargar festivos CV 2026</button>
+    </div>
+   </div>
+
    <div class="sec"><i class="fas fa-key"></i> PIN admin</div>
    <div class="aad" style="margin-bottom:10px">
     <input type="password" id="nPi" placeholder="Nuevo PIN (mín 4 caract.)">
@@ -451,6 +532,7 @@ var W_DEF = [
   {id:5,n:'Abdoulie',  ini:'AB',c:'#D97706',pin:'ulie', admin:false},
   {id:6,n:'Alieu',     ini:'AI',c:'#BE185D',pin:'lieu', admin:false},
   {id:7,n:'Ismael',    ini:'IS',c:'#4F46E5',pin:'mael', admin:false},
+  {id:9,n:'Fernando',  ini:'FE',c:'#0F766E',pin:'ando', admin:false, jefe:true},
   {id:8,n:'Sergio',    ini:'SE',c:'#DC2626',pin:'7777', admin:true}
 ];
  
@@ -463,11 +545,21 @@ var P   = ld('pt_p', []);
 var ST  = ld('pt_s', {pin:'7777', gsUrl:'', email:''});
 var PRE = ld('pt_pre', {desc:[],mat:[],maq:[],obs:[]});
 var W   = ld('pt_w', null);
+if(!W||!Array.isArray(W)||!W.length) W=JSON.parse(JSON.stringify(W_DEF));
 var CL  = ld('pt_c', []);
 var PR  = ld('pt_py', []);
 var TT  = ld('pt_tt', null);
+var FEST= ld('pt_fest', []); /* Array de strings 'YYYY-MM-DD' — festivos */
  
-if(!W || !W.length) W = JSON.parse(JSON.stringify(W_DEF));
+/* Fusionar W_DEF: añadir trabajadores nuevos que no estén ya en W local */
+(function mergeWDef(){
+  W_DEF.forEach(function(wd){
+    var existe=false;
+    for(var i=0;i<W.length;i++){if(String(W[i].id)===String(wd.id)){existe=true;break;}}
+    if(!existe) W.push(JSON.parse(JSON.stringify(wd)));
+  });
+  svW();
+})();
 if(!ST.gsUrl) ST.gsUrl = GS_URL;
 if(!TT) TT = [
   {id:'sold_alu',l:'Soldadura aluminio',i:'fa-fire'},
@@ -481,6 +573,8 @@ if(!TT) TT = [
   {id:'matric',  l:'Matricería',        i:'fa-cogs'},
   {id:'pintura', l:'Pintura',           i:'fa-paint-roller'},
   {id:'limpieza',l:'Limpieza',          i:'fa-broom'},
+  {id:'horas_x', l:'Horas Extra',       i:'fa-bolt'},
+  {id:'ausencia',l:'Ausencia',          i:'fa-user-slash'},
   {id:'otros',   l:'Otros',             i:'fa-ellipsis-h'}
 ];
  
@@ -497,6 +591,63 @@ var PD_src = 'none'; /* 'sheets' | 'local' | 'none' */
    UTILS
 ============================================================ */
 function tod(){return new Date().toISOString().split('T')[0];}
+/* Extrae YYYY-MM-DD de cualquier formato que venga de Sheets:
+   - '2025-05-19'  → '2025-05-19'
+   - '2025-05-19T06:00:00.000Z' → '2025-05-19'
+   - '1899-12-30T14:00:00.000Z' → '' (fecha fantasma de Excel = solo hora)
+   - Date object → 'YYYY-MM-DD'
+   - '19/05/2025' → '2025-05-19'  */
+function sanitizeFecha(v){
+  if(!v) return '';
+  var s=String(v).trim();
+  /* ISO con T: coger solo la parte de fecha */
+  if(s.indexOf('T')>0) s=s.split('T')[0];
+  /* Formato DD/MM/YYYY */
+  var dmy=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(dmy) s=dmy[3]+'-'+(dmy[2].length<2?'0':'')+dmy[2]+'-'+(dmy[1].length<2?'0':'')+dmy[1];
+  /* Validar que sea YYYY-MM-DD y no la fecha fantasma de Excel */
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(s)) return '';
+  if(s==='1899-12-30'||s==='1899-12-31'||s.startsWith('1899')) return '';
+  return s;
+}
+/* Extrae HH:MM de cualquier formato de hora de Sheets:
+   - '14:00' → '14:00'
+   - '1899-12-30T14:00:00.000Z' → '14:00'
+   - '0.583333' (fracción decimal de día) → '14:00' */
+function sanitizeHora(v){
+  if(!v) return '';
+  var s=String(v).trim();
+  if(s.indexOf('T')>0){
+    /* Sheets/GAS serializa horas como ISO UTC con fecha base 1899.
+       Usar Date.getHours() para convertir a hora local del navegador (España). */
+    try{
+      var d=new Date(s);
+      if(!isNaN(d.getTime())){
+        var h=d.getHours(), m=d.getMinutes();
+        /* Redondear minutos al :00 o :30 — los minutos son ruido de GAS */
+        if(m<15){m=0;}else if(m<45){m=30;}else{m=0;h=(h+1)%24;}
+        return (h<10?'0':'')+h+':'+(m<10?'0':'')+m;
+      }
+    }catch(e){}
+    /* Fallback: extraer HH:MM directamente */
+    var tp=s.split('T')[1]||'';
+    var hm=tp.substring(0,5);
+    if(/^\d{2}:\d{2}$/.test(hm)) return hm;
+  }
+  /* Ya es HH:MM */
+  if(/^\d{1,2}:\d{2}$/.test(s)){
+    var parts=s.split(':');
+    return (parts[0].length<2?'0':'')+parts[0]+':'+parts[1];
+  }
+  /* Fracción decimal de día (0.25=06:00, 0.583=14:00) */
+  var n=parseFloat(s);
+  if(!isNaN(n)&&n>=0&&n<1){
+    var totalMin=Math.round(n*1440);
+    var fh=Math.floor(totalMin/60),fm=totalMin%60;
+    return (fh<10?'0':'')+fh+':'+(fm<10?'0':'')+fm;
+  }
+  return '';
+}
 function fmtD(s){try{var d=new Date(s+'T12:00:00');return ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][d.getDay()]+' '+d.getDate()+' '+['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][d.getMonth()];}catch(e){return s;}}
 function esc(s){if(s==null)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function svP(){try{localStorage.setItem('pt_p',JSON.stringify(P));}catch(e){}}
@@ -504,6 +655,7 @@ function svC(){try{localStorage.setItem('pt_c',JSON.stringify(CL));}catch(e){}}
 function svR(){try{localStorage.setItem('pt_py',JSON.stringify(PR));}catch(e){}}
 function svT(){try{localStorage.setItem('pt_tt',JSON.stringify(TT));}catch(e){}}
 function svPre(){try{localStorage.setItem('pt_pre',JSON.stringify(PRE));}catch(e){}}
+function svFest(){try{localStorage.setItem('pt_fest',JSON.stringify(FEST));}catch(e){}}
 function svW(){try{localStorage.setItem('pt_w',JSON.stringify(W));}catch(e){}}
 function svS(){
   var g=document.getElementById('gsU'); if(g&&g.value.trim()) ST.gsUrl=g.value.trim();
@@ -540,7 +692,7 @@ function sw(t){
   /* Acciones por página */
   if(t==='Nuevo') shV('sel');
   if(t==='Hoy')   rHoy();
-  if(t==='Hist')  rHist();
+  if(t==='Hist')  {poblarMesSel();rHist();}
   if(t==='Admin') rAdm();
 }
  
@@ -584,12 +736,20 @@ function goDash(){shV('dash');}
 ============================================================ */
 function rWG(){
   var g=document.getElementById('wG'); if(!g)return;
+  /* Ordenar: primero no-admin no-jefe (por id), luego jefes, luego admins */
+  var sorted=W.slice().sort(function(a,b){
+    var ra=(a.admin?2:a.jefe?1:0), rb=(b.admin?2:b.jefe?1:0);
+    if(ra!==rb) return ra-rb;
+    return (a.id>b.id?1:-1);
+  });
   var h='';
-  for(var i=0;i<W.length;i++){
-    var w=W[i];
-    h+='<button class="wb'+(w.admin?' adm-btn':'')+'" type="button" onclick="askPin('+w.id+')">';
+  for(var i=0;i<sorted.length;i++){
+    var w=sorted[i];
+    var cls='wb'+(w.admin?' adm-btn':w.jefe?' jefe-btn':'');
+    var rol=w.admin?'Administración':w.jefe?'Jefe de Taller':'Toca para entrar';
+    h+='<button class="'+cls+'" type="button" onclick="askPin('+w.id+')">';
     h+='<div class="wa" style="background:'+w.c+'">'+w.ini+'</div>';
-    h+='<div><div class="wn">'+esc(w.n)+'</div><div class="wr">'+(w.admin?'Administración':'Toca para entrar')+'</div></div>';
+    h+='<div><div class="wn">'+esc(w.n)+'</div><div class="wr">'+rol+'</div></div>';
     h+='</button>';
   }
   g.innerHTML=h;
@@ -663,12 +823,18 @@ function rJor(){
   var h='';
   for(var i=0;i<my.length;i++){
     var p=my[i];
-    h+='<div class="ec"><div class="top"><span class="tp">'+esc(p.tt)+'</span>';
+    var isAus=(p.ti==='ausencia'||p.tt==='Ausencia');
+    var isHX=(p.hx||p.ti==='horas_x'||p.tt==='Horas Extra');
+    h+='<div class="ec'+(isAus?' ausencia':'')+'">';
+    h+='<div class="top"><span class="tp">'+esc(p.tt)+'</span>';
+    if(isAus&&p.aus_motivo) h+='<span class="aus-tag">'+esc(p.aus_motivo)+'</span>';
+    if(isHX) h+='<span style="font-size:9px;font-weight:700;color:var(--acc2);margin-left:4px"><i class="fas fa-bolt"></i> HX</span>';
     if(p.cn) h+='<span class="cl">'+esc(p.cn)+'</span>';
-    h+='<span class="hr">'+p.ho+'h</span></div>';
+    h+='<span class="hr">'+(isAus?'—':p.ho+'h')+'</span></div>';
     h+='<div class="ds">'+esc(p.ds)+'</div>';
-    h+='<div class="dt">'+p.hi+' - '+p.hf;
+    h+='<div class="dt">'+(isAus?'Jornada completa':p.hi+' - '+p.hf);
     if(p.pn) h+=' · '+esc(p.pn);
+    if(p.pu&&p.pq>0) h+=' · <span style="color:var(--ok);font-weight:600">'+p.pq+' '+esc(p.pu)+'</span>';
     h+='</div><button class="del" type="button" onclick="delE('+p.id+')"><i class="fas fa-times"></i></button></div>';
   }
   c.innerHTML=h;
@@ -682,17 +848,28 @@ function addEntry(){
   ['eD','eM','eQ','eO'].forEach(function(x){var el=document.getElementById(x);if(el)el.value='';});
   document.getElementById('selC').value='';
   document.getElementById('selP').value='';
-  document.getElementById('eI').value='08:00';
-  document.getElementById('eF').value='12:00';
-  document.getElementById('eH').value='4';
+  document.getElementById('eI').value='06:00';
+  document.getElementById('eF').value='14:00';
+  document.getElementById('eH').value='8';
+  document.getElementById('ausMotivo').value='';
+  document.getElementById('ausCard').style.display='none';
+  document.getElementById('hxCard').style.display='none';
+  var ausM=document.getElementById('ausMotivo'); if(ausM) ausM.value='';
+  var ausO=document.getElementById('ausObs'); if(ausO) ausO.value='';
+  var ePU=document.getElementById('ePU'); if(ePU) ePU.value='';
+  var ePQ=document.getElementById('ePQ'); if(ePQ) ePQ.value='';
+  var horasCard=document.getElementById('horasCard'); if(horasCard) horasCard.style.display='block';
+  var detCard=document.getElementById('detalleCard'); if(detCard) detCard.style.display='block';
   var td=tod();
   var my=P.filter(function(p){return String(p.wid)===String(curW)&&p.fe===td;});
   if(my.length){
     var last=my.reduce(function(a,b){return a.id>b.id?a:b;});
-    document.getElementById('eI').value=last.hf;
-    var ph=last.hf.split(':'); var nf=Math.min(parseInt(ph[0])+4,20);
-    document.getElementById('eF').value=(nf<10?'0':'')+nf+':00';
-    calcH();
+    if(last.hf&&last.hf!='00:00'){
+      document.getElementById('eI').value=last.hf;
+      var ph=last.hf.split(':'); var nf=Math.min(parseInt(ph[0])+8,22);
+      document.getElementById('eF').value=(nf<10?'0':'')+nf+':00';
+      calcH();
+    }
   }
   shV('frm');
 }
@@ -714,6 +891,33 @@ function selT(id){
   curT=id;
   var ch=document.querySelectorAll('#tcG .tc');
   for(var i=0;i<ch.length;i++) ch[i].className=ch[i].getAttribute('data-tid')===id?'tc on':'tc';
+  /* Mostrar card especial según tipo */
+  var ausCard=document.getElementById('ausCard');
+  var hxCard=document.getElementById('hxCard');
+  var horasCard=document.getElementById('horasCard');
+  var detalleCard=document.getElementById('detalleCard');
+  if(ausCard) ausCard.style.display=(id==='ausencia')?'block':'none';
+  if(hxCard)  hxCard.style.display=(id==='horas_x')?'block':'none';
+  /* Ausencia: ocultar horas y detalle normal */
+  if(horasCard)  horasCard.style.display=(id==='ausencia')?'none':'block';
+  if(detalleCard) detalleCard.style.display=(id==='ausencia')?'none':'block';
+  /* Horas X: descripción obligatoria, campos normales visibles */
+  if(id==='ausencia'){
+    /* Forzar horas=0, descripcion='Ausencia' para que saveE() no falle */
+    document.getElementById('eH').value='0';
+    document.getElementById('eD').value='Ausencia';
+  } else if(id==='horas_x'){
+    /* horas extra empiezan en las 14:00 */
+    document.getElementById('eD').value='';
+    if(!document.getElementById('eI').value || document.getElementById('eI').value==='06:00'){
+      document.getElementById('eI').value='14:00';
+      document.getElementById('eF').value='16:00';
+      calcH();
+    }
+  } else {
+    if(document.getElementById('eH').value==='0') document.getElementById('eH').value='8';
+    document.getElementById('eD').value='';
+  }
 }
  
 /* ============================================================
@@ -729,7 +933,7 @@ function gSug(campo,lim){
   return Object.keys(freq).sort(function(a,b){return freq[b]-freq[a];}).slice(0,lim);
 }
 function rSug(){
-  var map={desc:['sD','dlD','eD'],mat:['sM','dlM','eM'],maq:['sQ','dlQ','eQ'],obs:[null,null,'eO']};
+  var map={desc:['sD','dlD','eD'],mat:['sM','dlM','eM'],maq:['sQ','dlQ','eQ'],obs:['sO',null,'eO']};
   for(var campo in map){
     if(!map.hasOwnProperty(campo)) continue;
     var sugs=gSug(campo),s=map[campo];
@@ -737,10 +941,106 @@ function rSug(){
     if(s[1]){var dl=document.getElementById(s[1]);if(dl)dl.innerHTML=sugs.map(function(t){return'<option value="'+esc(t)+'">';}).join('');}
   }
 }
-function flF(id,txt){var el=document.getElementById(id);if(el){el.value=el.value.trim()?el.value.trim()+', '+txt:txt;el.focus();}}
+function flF(id,txt){var el=document.getElementById(id);if(el){var v=txt.toLowerCase();el.value=el.value.trim()?el.value.trim()+', '+v:v;el.focus();}}
+function poblarMesSel(){
+  /* Rellena el selector con los últimos 6 meses como opciones base */
+  var sel=document.getElementById('hMes'); if(!sel||sel.options.length>1)return;
+  var MNOM=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var now=new Date();
+  var opts='<option value="">Selecciona un mes...</option>';
+  for(var i=0;i<6;i++){
+    var d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    var val=d.getFullYear()+'-'+(d.getMonth()<9?'0':'')+(d.getMonth()+1);
+    var lbl=MNOM[d.getMonth()]+' '+d.getFullYear();
+    opts+='<option value="'+val+'"'+(i===0?' selected':'')+'>'+lbl+'</option>';
+  }
+  sel.innerHTML=opts;
+}
 function calcH(){
   var i=document.getElementById('eI').value,f=document.getElementById('eF').value;
   if(i&&f){var a=i.split(':'),b=f.split(':');var h=(parseInt(b[0])*60+parseInt(b[1])-parseInt(a[0])*60-parseInt(a[1]))/60;if(h<0)h+=24;document.getElementById('eH').value=Math.max(0,h).toFixed(1);}
+}
+
+/* ============================================================
+   MOTOR HX — detecta y divide horas normales / extra
+   Horario normal: 06:00-14:00 L-V, días no festivos
+   Todo lo demás: HX
+============================================================ */
+function toMin(t){var p=t.split(':');return parseInt(p[0])*60+parseInt(p[1]);}
+function esDiaHX(fecha){
+  /* fecha: 'YYYY-MM-DD' */
+  if(FEST.indexOf(fecha)>=0) return true;          /* festivo */
+  var d=new Date(fecha+'T12:00:00');
+  var dow=d.getDay(); /* 0=Dom, 6=Sab */
+  return dow===0||dow===6;
+}
+function calcHX(fecha, inicioStr, finStr){
+  /* Devuelve {horasNorm, horasHX, splitNecesario, inicioNorm, finNorm, inicioHX, finHX}
+     Horario normal: 06:00(360min) a 14:00(840min) en días L-V no festivos */
+  var NORM_INI=360, NORM_FIN=840; /* 06:00, 14:00 en minutos */
+  var ini=toMin(inicioStr), fin=toMin(finStr);
+  if(fin<=ini) fin+=1440; /* paso por medianoche */
+  var totalMin=fin-ini;
+  if(esDiaHX(fecha)){
+    /* Día completo HX */
+    return{horasNorm:0, horasHX:totalMin/60, splitNecesario:true,
+      inicioNorm:'', finNorm:'', inicioHX:inicioStr, finHX:finStr};
+  }
+  /* Día normal: calcular solapamiento con 06:00-14:00 */
+  var overlapIni=Math.max(ini, NORM_INI);
+  var overlapFin=Math.min(fin, NORM_FIN);
+  var normMin=Math.max(0, overlapFin-overlapIni);
+  var hxMin=totalMin-normMin;
+  if(hxMin<=0){
+    return{horasNorm:normMin/60, horasHX:0, splitNecesario:false,
+      inicioNorm:inicioStr, finNorm:finStr, inicioHX:'', finHX:''};
+  }
+  /* Hay mezcla — calcular bloques */
+  /* Bloque normal: dentro de 06-14 */
+  var normIniStr='', normFinStr='', hxIniStr='', hxFinStr='';
+  if(normMin>0){
+    normIniStr=minsToTime(overlapIni); normFinStr=minsToTime(overlapFin);
+  }
+  /* Bloque HX: partes fuera del 06-14 */
+  /* Puede haber HX antes (ini<360) y/o después (fin>840) */
+  /* Para simplificar: si hay dos bloques HX los fusionamos en el más grande */
+  var hxA=Math.max(0, NORM_INI-ini);   /* minutos antes de las 6 */
+  var hxB=Math.max(0, fin-NORM_FIN);   /* minutos después de las 14 */
+  if(hxA>=hxB){
+    hxIniStr=inicioStr; hxFinStr=minsToTime(Math.min(fin,NORM_INI));
+  } else {
+    hxIniStr=minsToTime(Math.max(ini,NORM_FIN)); hxFinStr=finStr;
+  }
+  return{horasNorm:normMin/60, horasHX:hxMin/60, splitNecesario:true,
+    inicioNorm:normIniStr, finNorm:normFinStr,
+    inicioHX:hxIniStr, finHX:hxFinStr};
+}
+function minsToTime(m){m=m%1440;var h=Math.floor(m/60),mn=m%60;return(h<10?'0':'')+h+':'+(mn<10?'0':'')+mn;}
+function fmt2(n){return n%1===0?n.toFixed(0):n.toFixed(1);}
+
+/* Popup de confirmación HX — llama cb(confirmed) */
+function showHXConfirm(info, cb){
+  var ov=document.createElement('div'); ov.className='pov'; ov.id='hxOv';
+  var esDiaX=info.esDia;
+  var msg=esDiaX
+    ? '<b>Este día es '+info.diaLabel+'.</b><br>Toda la jornada ('+fmt2(info.horasHX)+'h) se guardará como Horas Extra.'
+    : 'Se detectan <b>'+fmt2(info.horasHX)+'h fuera del horario 06:00-14:00</b>.<br>'
+      +(info.horasNorm>0?'Se crearán <b>2 entradas</b>:<br>• Normal: '+info.inicioNorm+'–'+info.finNorm+' ('+fmt2(info.horasNorm)+'h)<br>• Extra: '+info.inicioHX+'–'+info.finHX+' ('+fmt2(info.horasHX)+'h)':'Toda la jornada será Horas Extra ('+fmt2(info.horasHX)+'h).');
+  var box=document.createElement('div'); box.className='pbox';
+  box.innerHTML='<div style="font-size:28px;margin-bottom:8px">⚠️</div>'
+    +'<h2 style="font-size:15px;margin-bottom:8px">Horas fuera de turno detectadas</h2>'
+    +'<div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:14px">'+msg+'</div>'
+    +'<div style="font-size:10px;background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:8px;color:var(--acc);margin-bottom:14px"><i class="fas fa-info-circle"></i> ¿Error de horario AM/PM? Pulsa "Corregir" para revisar.</div>'
+    +'<div class="prow"><button class="bt bt2" id="hxCorr">Corregir hora</button><button class="bt bt1" id="hxConf">Confirmar HX</button></div>';
+  ov.appendChild(box); document.body.appendChild(ov);
+  document.getElementById('hxCorr').onclick=function(){
+    var o=document.getElementById('hxOv');if(o)o.parentNode.removeChild(o);
+    cb(false);
+  };
+  document.getElementById('hxConf').onclick=function(){
+    var o=document.getElementById('hxOv');if(o)o.parentNode.removeChild(o);
+    cb(true);
+  };
 }
  
 /* ============================================================
@@ -749,35 +1049,117 @@ function calcH(){
 function saveE(){
   if(!curW){tst('Selecciona trabajador','er');return;}
   if(!curT){tst('Selecciona tipo de trabajo','er');return;}
-  var horas=parseFloat(document.getElementById('eH').value);
-  if(!horas||horas<=0){tst('Indica las horas','er');return;}
-  var desc=document.getElementById('eD').value.trim();
-  if(!desc){tst('Añade descripción','er');return;}
   var td=tod();
   var inicio=document.getElementById('eI').value;
   var fin=document.getElementById('eF').value;
-  var mat=document.getElementById('eM').value.trim();
-  var maq=document.getElementById('eQ').value.trim();
-  var obs=document.getElementById('eO').value.trim();
+  var mat=(document.getElementById('eM').value.trim()).toLowerCase();
+  var maq=(document.getElementById('eQ').value.trim()).toLowerCase();
+  var obs=(document.getElementById('eO').value.trim()).toLowerCase();
   var cliTx=document.getElementById('selC').value.trim();
   var proTx=document.getElementById('selP').value.trim();
+  var ausMot=document.getElementById('ausMotivo')?document.getElementById('ausMotivo').value.trim():'';
+  var puVal=document.getElementById('ePU')?document.getElementById('ePU').value.trim():'';
+  var pqVal=document.getElementById('ePQ')?parseInt(document.getElementById('ePQ').value)||0:0;
   var w=null; for(var i=0;i<W.length;i++){if(String(W[i].id)===String(curW)){w=W[i];break;}}
   var tipo=null; for(var i=0;i<TT.length;i++){if(TT[i].id===curT){tipo=TT[i];break;}}
   if(!w||!tipo){tst('Error interno','er');return;}
-  /* Auto-añadir cliente/proyecto si son nuevos */
+
+  /* AUSENCIA */
+  if(curT==='ausencia'){
+    if(!ausMot){tst('Indica el motivo de la ausencia','er');return;}
+    var entry={id:Date.now(),fe:td,ho:0,hi:'',hf:'',
+      wid:w.id,wn:w.n,wi:w.ini,wc:w.c,
+      cn:cliTx,pn:proTx,tt:tipo.l,ti:tipo.id,
+      ds:'Ausencia: '+ausMot,mt:'',ma:'',ob:obs,
+      aus_motivo:ausMot,hx:false,pu:'',pq:0,
+      ts:new Date().toISOString(),sy:false};
+    P.push(entry); svP(); sndGS(entry);
+    tst('Ausencia registrada','ok');
+    shV('jor'); uSB(); return;
+  }
+
+  var horas=parseFloat(document.getElementById('eH').value);
+  if(!horas||horas<=0){tst('Indica las horas','er');return;}
+  var desc=(document.getElementById('eD').value.trim()).toLowerCase();
+  if(!desc){tst('Añade descripción','er');return;}
+
+  /* Si el usuario ya eligió manualmente Horas Extra, saltar análisis automático */
+  if(curT==='horas_x'){
+    if(!proTx&&!cliTx){tst('Las Horas Extra deben vincularse a proyecto o cliente','er');return;}
+    _commitEntrada(w,tipo,td,inicio,fin,horas,desc,mat,maq,obs,cliTx,proTx,puVal,pqVal,true);
+    return;
+  }
+
+  /* ANÁLISIS HX AUTOMÁTICO */
+  if(!inicio||!fin){
+    _commitEntrada(w,tipo,td,inicio,fin,horas,desc,mat,maq,obs,cliTx,proTx,puVal,pqVal,false);
+    return;
+  }
+  var hxRes=calcHX(td,inicio,fin);
+  if(!hxRes.splitNecesario){
+    /* Entrada completamente dentro del horario normal — guardar directamente */
+    _commitEntrada(w,tipo,td,inicio,fin,horas,desc,mat,maq,obs,cliTx,proTx,puVal,pqVal,false);
+    return;
+  }
+  /* Hay HX — mostrar popup de confirmación */
+  var d=new Date(td+'T12:00:00');
+  var DIAS=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  var esFestivo=FEST.indexOf(td)>=0;
+  var esDiaX=esDiaHX(td);
+  var diaLabel=esFestivo?'festivo':DIAS[d.getDay()];
+  var info={
+    esDia:esDiaX&&hxRes.horasNorm===0,
+    diaLabel:diaLabel,
+    horasNorm:hxRes.horasNorm,
+    horasHX:hxRes.horasHX,
+    inicioNorm:hxRes.inicioNorm, finNorm:hxRes.finNorm,
+    inicioHX:hxRes.inicioHX,    finHX:hxRes.finHX
+  };
+  showHXConfirm(info, function(confirmed){
+    if(!confirmed) return; /* el trabajador vuelve a corregir */
+    /* Auto-añadir cliente/proyecto */
+    _autoAddCliPro(cliTx,proTx);
+    if(hxRes.horasNorm>0){
+      /* Entrada normal */
+      var eN={id:Date.now(),fe:td,ho:hxRes.horasNorm,hi:hxRes.inicioNorm,hf:hxRes.finNorm,
+        wid:w.id,wn:w.n,wi:w.ini,wc:w.c,cn:cliTx,pn:proTx,tt:tipo.l,ti:tipo.id,
+        ds:desc,mt:mat,ma:maq,ob:obs,aus_motivo:'',hx:false,pu:puVal,pq:pqVal,
+        ts:new Date().toISOString(),sy:false};
+      P.push(eN); sndGS(eN);
+    }
+    /* Entrada HX */
+    var tipoHX=null;for(var i=0;i<TT.length;i++){if(TT[i].id==='horas_x'){tipoHX=TT[i];break;}}
+    if(!tipoHX) tipoHX={id:'horas_x',l:'Horas Extra',i:'fa-bolt'};
+    var eHX={id:Date.now()+1,fe:td,ho:hxRes.horasHX,hi:hxRes.inicioHX,hf:hxRes.finHX,
+      wid:w.id,wn:w.n,wi:w.ini,wc:w.c,cn:cliTx,pn:proTx,tt:tipoHX.l,ti:tipoHX.id,
+      ds:desc+' [hx]',mt:mat,ma:maq,ob:obs,aus_motivo:'',hx:true,pu:'',pq:0,
+      ts:new Date().toISOString(),sy:false};
+    P.push(eHX); sndGS(eHX);
+    svP();
+    var msg=hxRes.horasNorm>0
+      ? fmt2(hxRes.horasNorm)+'h normales + '+fmt2(hxRes.horasHX)+'h extra guardadas'
+      : fmt2(hxRes.horasHX)+'h extra guardadas';
+    tst(msg,'ok');
+    shV('jor'); uSB();
+  });
+}
+function _autoAddCliPro(cliTx,proTx){
   if(cliTx&&!CL.find(function(c){return c.n.toLowerCase()===cliTx.toLowerCase();})){CL.push({id:'c'+Date.now(),n:cliTx});svC();rClDL();}
   if(proTx&&!PR.find(function(p){return p.n.toLowerCase()===proTx.toLowerCase();})){
-    var cid='';var cli=CL.find(function(c){return c.n.toLowerCase()===cliTx.toLowerCase();});if(cli)cid=cli.id;
-    PR.push({id:'p'+Date.now(),n:proTx,cid:cid});svR();rPrDL();
+    var cid2='';var cli2=CL.find(function(c){return c.n.toLowerCase()===cliTx.toLowerCase();});if(cli2)cid2=cli2.id;
+    PR.push({id:'p'+Date.now(),n:proTx,cid:cid2});svR();rPrDL();
   }
+}
+function _commitEntrada(w,tipo,td,inicio,fin,horas,desc,mat,maq,obs,cliTx,proTx,puVal,pqVal,esHX){
+  _autoAddCliPro(cliTx,proTx);
   var entry={id:Date.now(),fe:td,ho:horas,hi:inicio,hf:fin,
     wid:w.id,wn:w.n,wi:w.ini,wc:w.c,
     cn:cliTx,pn:proTx,tt:tipo.l,ti:tipo.id,
     ds:desc,mt:mat,ma:maq,ob:obs,
+    aus_motivo:'',hx:esHX,pu:puVal,pq:pqVal,
     ts:new Date().toISOString(),sy:false};
-  P.push(entry); svP();
-  sndGS(entry);
-  tst(tipo.l+' · '+horas+'h guardadas','ok');
+  P.push(entry); svP(); sndGS(entry);
+  tst(tipo.l+' · '+fmt2(horas)+'h guardadas','ok');
   shV('jor'); uSB();
 }
  
@@ -792,13 +1174,17 @@ function sndGS(p){
     body:JSON.stringify({action:'saveParte',data:{
       id:p.id, fecha:p.fe, worker_id:p.wid, nombre:p.wn,
       cliente:p.cn||'', proyecto:p.pn||'', tipo:p.tt,
-      inicio:p.hi, fin:p.hf, horas:p.ho,
+      inicio:p.hi||'', fin:p.hf||'', horas:p.ho||0,
       descripcion:p.ds||'', material:p.mt||'',
-      maquinaria:p.ma||'', obs:p.ob||'', timestamp:p.ts
+      maquinaria:p.ma||'', obs:p.ob||'',
+      aus_motivo:p.aus_motivo||'',
+      horas_extra:p.hx?'SI':'',
+      prod_unidad:p.pu||'', prod_cantidad:p.pq||0,
+      timestamp:p.ts
     }})
   }).then(function(){p.sy=true;svP();uSB();}).catch(function(){p.sy=false;svP();uSB();});
 }
- 
+
 function tGS(){
   var url=ST.gsUrl||GS_URL; if(!url){tst('Sin URL','er');return;}
   tst('Probando...','inf');
@@ -806,6 +1192,81 @@ function tGS(){
     .then(function(r){return r.json();})
     .then(function(d){tst(d.status==='ok'?'Conexión OK ✓':'Error: '+(d.msg||'sin status'), d.status==='ok'?'ok':'er');})
     .catch(function(){tst('Sin respuesta — comprueba la URL','er');});
+}
+
+/* ============================================================
+   SYNC CONFIG DESDE SHEETS
+   Descarga: trabajadores, tipos, clientes, proyectos, plantillas.
+   Llamada automática en background al arrancar la app,
+   y manual desde el botón de Admin.
+============================================================ */
+function syncConfig(manual){
+  var url=ST.gsUrl||GS_URL;
+  if(!url){if(manual)tst('Sin URL configurada','er');return;}
+  if(manual) tst('Descargando config...','inf');
+  fetch(url+'?action=sync&_='+Date.now())
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(d){
+      if(d.status!=='ok') throw new Error(d.msg||'error');
+      var cambios=[];
+      /* Trabajadores */
+      if(d.trabajadores&&d.trabajadores.length){
+        var wNew=d.trabajadores.map(function(t){
+          return{id:parseInt(t.id)||t.id,n:t.nombre,ini:t.iniciales,
+            c:t.color||'#888',pin:String(t.pin),
+            admin:t.rol==='admin',jefe:t.rol==='jefe'};
+        });
+        /* Fusionar: mantener W_DEF hardcoded + añadir los de Sheets */
+        W_DEF.forEach(function(wd){
+          var enSheets=wNew.find(function(x){return String(x.id)===String(wd.id);});
+          if(!enSheets) wNew.push(JSON.parse(JSON.stringify(wd)));
+        });
+        /* Sergio siempre admin y al final */
+        W=wNew.sort(function(a,b){
+          var ra=(a.admin?2:a.jefe?1:0),rb=(b.admin?2:b.jefe?1:0);
+          if(ra!==rb)return ra-rb;
+          return (a.id>b.id?1:-1);
+        });
+        svW(); rWG(); cambios.push('trabajadores');
+      }
+      /* Tipos de trabajo */
+      if(d.tipos&&d.tipos.length){
+        TT=d.tipos.map(function(t){return{id:t.id,l:t.nombre,i:t.icono||'fa-wrench'};});
+        /* Garantizar Horas Extra y Ausencia siempre presentes */
+        if(!TT.find(function(t){return t.id==='horas_x';}))
+          TT.push({id:'horas_x',l:'Horas Extra',i:'fa-bolt'});
+        if(!TT.find(function(t){return t.id==='ausencia';}))
+          TT.push({id:'ausencia',l:'Ausencia',i:'fa-user-slash'});
+        svT(); rTC(); cambios.push('tipos');
+      }
+      /* Clientes */
+      if(d.clientes){
+        CL=d.clientes.map(function(c){return{id:c.id,n:c.nombre};});
+        svC(); rClDL(); cambios.push('clientes');
+      }
+      /* Proyectos */
+      if(d.proyectos){
+        PR=d.proyectos.map(function(p){return{id:p.id,n:p.nombre,cid:p.cliente_id||''};});
+        svR(); rPrDL(); cambios.push('proyectos');
+      }
+      /* Plantillas — CLAVE: esto es lo que faltaba */
+      if(d.plantillas&&d.plantillas.length){
+        var pre={desc:[],mat:[],maq:[],obs:[]};
+        d.plantillas.forEach(function(pl){
+          var c=pl.campo; var t=(pl.texto||'').toLowerCase().trim();
+          if(pre[c]&&t&&pre[c].indexOf(t)<0) pre[c].push(t);
+        });
+        PRE=pre; svPre(); rSug(); cambios.push('plantillas');
+      }
+      if(manual){
+        tst(cambios.length?'Config actualizada: '+cambios.join(', '):'Sin cambios','ok');
+        rAdm(); /* refrescar lista de plantillas visible en Admin */
+      }
+    })
+    .catch(function(err){
+      if(manual) tst('Error sync: '+err.message,'er');
+      else console.warn('[syncConfig]',err.message);
+    });
 }
  
 function syAll(){
@@ -816,7 +1277,7 @@ function syAll(){
   var done=0;
   uns.forEach(function(p){
     fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'saveParte',data:{id:p.id,fecha:p.fe,worker_id:p.wid,nombre:p.wn,cliente:p.cn||'',proyecto:p.pn||'',tipo:p.tt,inicio:p.hi,fin:p.hf,horas:p.ho,descripcion:p.ds||'',material:p.mt||'',maquinaria:p.ma||'',obs:p.ob||'',timestamp:p.ts}})
+      body:JSON.stringify({action:'saveParte',data:{id:p.id,fecha:p.fe,worker_id:p.wid,nombre:p.wn,cliente:p.cn||'',proyecto:p.pn||'',tipo:p.tt,inicio:p.hi||'',fin:p.hf||'',horas:p.ho||0,descripcion:p.ds||'',material:p.mt||'',maquinaria:p.ma||'',obs:p.ob||'',aus_motivo:p.aus_motivo||'',horas_extra:p.hx?'SI':'',prod_unidad:p.pu||'',prod_cantidad:p.pq||0,timestamp:p.ts}})
     }).then(function(){p.sy=true;svP();done++;if(done===uns.length){tst(done+' partes subidos ✓','ok');uSB();}})
      .catch(function(){done++;if(done===uns.length)uSB();});
   });
@@ -854,14 +1315,13 @@ function loadFromSheets(){
     })
     .then(function(res){
       if(res.status==='ok' && Array.isArray(res.partes)){
-        /* Normalizar campos: el Apps Script v3 usa nombre/cliente/tipo etc. */
         PD=res.partes.map(function(p){
           return {
             id       : p.id||p.timestamp||Math.random(),
-            fe       : String(p.fecha||p.fe||''),
+            fe       : sanitizeFecha(p.fecha||p.fe||''),
             ho       : parseFloat(p.horas||p.ho)||0,
-            hi       : p.inicio||p.hi||'',
-            hf       : p.fin||p.hf||'',
+            hi       : sanitizeHora(p.inicio||p.hi||''),
+            hf       : sanitizeHora(p.fin||p.hf||''),
             wid      : p.worker_id||p.wid||0,
             wn       : p.nombre||p.trabajadorNombre||p.wn||'',
             cn       : p.cliente||p.cn||'',
@@ -951,6 +1411,50 @@ function rDash(){
     tbl+='<tr class="total"><td>TOTAL</td>';uTt.forEach(function(t){tbl+='<td>'+(cTot[t]||0).toFixed(1)+'</td>';});tbl+='<td>'+gT.toFixed(1)+'</td></tr></tbody></table>';
     document.getElementById('dPvt').innerHTML=tbl;
   }
+  /* HORAS EXTRA por trabajador */
+  var hxEl=document.getElementById('dHX');
+  if(hxEl){
+    var hxData={};
+    pp.forEach(function(p){if(p.hx||p.ti==='horas_x'||p.tt==='Horas Extra'){hxData[p.wn]=(hxData[p.wn]||[]);hxData[p.wn].push(p);}});
+    var hxNames=Object.keys(hxData);
+    if(!hxNames.length){hxEl.innerHTML='<div class="empty"><p>Sin horas extra en este periodo</p></div>';}
+    else{
+      var hxH='';
+      hxNames.sort().forEach(function(wn){
+        var lista=hxData[wn];
+        var tot=lista.reduce(function(s,p){return s+p.ho;},0);
+        hxH+='<div class="byitem" style="flex-direction:column;align-items:flex-start;gap:3px">';
+        hxH+='<div style="display:flex;width:100%;align-items:center"><span class="bn" style="font-size:12px;font-weight:700">'+esc(wn)+'</span><span class="bh" style="color:var(--acc2)">'+tot.toFixed(1)+'h</span></div>';
+        lista.forEach(function(p){
+          hxH+='<div style="font-size:9px;color:var(--muted);padding-left:6px">'+fmtD(p.fe)+' · '+(p.pn||p.cn||'sin proyecto')+' · '+p.ho+'h'+(p.ds?' — '+esc(p.ds.substring(0,40)):'')+'</div>';
+        });
+        hxH+='</div>';
+      });
+      hxEl.innerHTML=hxH;
+    }
+  }
+  /* AUSENCIAS por trabajador */
+  var ausEl=document.getElementById('dAus');
+  if(ausEl){
+    var ausData={};
+    pp.forEach(function(p){if(p.ti==='ausencia'||p.tt==='Ausencia'){ausData[p.wn]=(ausData[p.wn]||[]);ausData[p.wn].push(p);}});
+    var ausNames=Object.keys(ausData);
+    if(!ausNames.length){ausEl.innerHTML='<div class="empty"><p>Sin ausencias en este periodo</p></div>';}
+    else{
+      var ausH='';
+      ausNames.sort().forEach(function(wn){
+        var lista=ausData[wn];
+        ausH+='<div class="byitem" style="flex-direction:column;align-items:flex-start;gap:3px">';
+        ausH+='<div style="display:flex;width:100%;align-items:center"><span class="bn" style="font-size:12px;font-weight:700">'+esc(wn)+'</span><span style="font-size:10px;color:var(--err);font-weight:700;margin-left:auto">'+lista.length+' día(s)</span></div>';
+        lista.forEach(function(p){
+          var mot=p.aus_motivo||p.ob||p.ds||'–';
+          ausH+='<div style="font-size:9px;color:var(--muted);padding-left:6px">'+fmtD(p.fe)+' — <span style="color:var(--err)">'+esc(mot)+'</span></div>';
+        });
+        ausH+='</div>';
+      });
+      ausEl.innerHTML=ausH;
+    }
+  }
   /* Datalists de filtros */
   document.getElementById('dlDCl').innerHTML=cs.map(function(c){return'<option value="'+esc(c)+'">';}).join('');
   document.getElementById('dlDTt').innerHTML=Object.keys(htt).map(function(t){return'<option value="'+esc(t)+'">';}).join('');
@@ -998,46 +1502,149 @@ function rHoy(){
 }
  
 /* ============================================================
-   HISTORIAL
+   HISTORIAL — desde Sheets, filtrado por worker_id, por mes
 ============================================================ */
+function buildMesSel(partes){
+  /* Genera opciones de mes únicas ordenadas descendente */
+  var meses={};
+  partes.forEach(function(p){if(p.fe){var m=p.fe.substring(0,7);meses[m]=true;}});
+  var arr=Object.keys(meses).sort(function(a,b){return b.localeCompare(a);});
+  var sel=document.getElementById('hMes'); if(!sel)return;
+  var cur=sel.value;
+  var MNOM=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  sel.innerHTML='<option value="">Selecciona un mes...</option>'+arr.map(function(m){
+    var parts=m.split('-'); var lbl=MNOM[parseInt(parts[1])-1]+' '+parts[0];
+    return'<option value="'+m+'"'+(m===cur?' selected':'')+'>'+lbl+'</option>';
+  }).join('');
+  if(!cur&&arr.length) sel.value=arr[0];
+}
+function setHBanner(state,msg){
+  var b=document.getElementById('hBanner'); if(!b)return;
+  if(!state){b.style.display='none';return;}
+  b.style.display='block';
+  if(state==='load'){b.style.background='#FFF7ED';b.style.color='var(--acc)';b.style.borderColor='#FED7AA';b.innerHTML='<i class="fas fa-spinner fa-spin"></i> '+msg;}
+  else if(state==='ok'){b.style.background='#F0FDF4';b.style.color='var(--ok)';b.style.borderColor='#86EFAC';b.innerHTML='<i class="fas fa-cloud"></i> '+msg;}
+  else{b.style.background='#FEF2F2';b.style.color='var(--err)';b.style.borderColor='#FECACA';b.innerHTML='<i class="fas fa-exclamation-circle"></i> '+msg;}
+}
 function rHist(){
-  var d=document.getElementById('hD').value, hh=document.getElementById('hH').value;
-  var pp=P.filter(function(p){return(!d||p.fe>=d)&&(!hh||p.fe<=hh);}).sort(function(a,b){return b.fe.localeCompare(a.fe)||b.id-a.id;});
-  var th=pp.reduce(function(s,p){return s+p.ho;},0);
-  var tws=[],tds=[];
-  pp.forEach(function(p){if(tws.indexOf(p.wid)<0)tws.push(p.wid);if(tds.indexOf(p.fe)<0)tds.push(p.fe);});
-  document.getElementById('sHist').innerHTML=
-    '<div class="si"><div class="sv">'+pp.length+'</div><div class="sl">Entradas</div></div>'+
-    '<div class="si"><div class="sv">'+th.toFixed(1)+'</div><div class="sl">Horas</div></div>'+
-    '<div class="si"><div class="sv">'+tds.length+'</div><div class="sl">Días</div></div>'+
-    '<div class="si"><div class="sv">'+tws.length+'</div><div class="sl">Trabaj.</div></div>';
-  var c=document.getElementById('lHist');
-  if(!pp.length){c.innerHTML='<div class="empty"><i class="fas fa-archive"></i><p>No hay partes</p></div>';return;}
-  var gf={};
-  pp.forEach(function(p){if(!gf[p.fe])gf[p.fe]=[];gf[p.fe].push(p);});
-  var h='';
-  Object.keys(gf).sort(function(a,b){return b.localeCompare(a);}).forEach(function(f){
-    var gr=gf[f],hg=gr.reduce(function(s,p){return s+p.ho;},0);
-    h+='<div style="margin-bottom:12px">';
-    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-weight:700;font-size:11px">'+fmtD(f)+'</span><span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--acc);font-weight:700">'+hg.toFixed(1)+'h</span></div>';
-    var gw={};gr.forEach(function(p){if(!gw[p.wid])gw[p.wid]=[];gw[p.wid].push(p);});
-    Object.keys(gw).forEach(function(tid){
-      var w=null;for(var i=0;i<W.length;i++){if(String(W[i].id)===String(tid)){w=W[i];break;}}if(!w)return;
-      var ent=gw[tid],twh=ent.reduce(function(s,p){return s+p.ho;},0);
-      h+='<div style="display:flex;align-items:center;gap:4px;margin:4px 0 2px">';
-      h+='<div style="width:18px;height:18px;border-radius:50%;background:'+w.c+';display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#fff">'+w.ini+'</div>';
-      h+='<span style="font-weight:700;font-size:10px">'+esc(w.n)+'</span>';
-      h+='<span style="margin-left:auto;font-family:\'IBM Plex Mono\',monospace;font-size:9px;color:var(--acc);font-weight:700">'+twh.toFixed(1)+'h</span></div>';
-      ent.forEach(function(p){
-        h+='<div class="pi" style="display:flex"><div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:'+w.c+'"></div>';
-        h+='<div class="pi2"><div class="pn"><span class="bd bw">'+esc(p.tt)+'</span>';
-        if(p.cn)h+=' <span class="bd bc">'+esc(p.cn)+'</span>';
-        h+='</div><div class="pd">'+esc(p.ds.length>35?p.ds.substring(0,35)+'...':p.ds)+'</div>';
-        h+='<div class="ph">'+p.ho+'h</div></div></div>';
-      });
+  if(!curW){
+    /* Sin trabajador logueado: mostrar mensaje */
+    document.getElementById('lHist').innerHTML='<div class="empty"><i class="fas fa-user"></i><p>Entra con tu nombre para ver tu historial</p></div>';
+    document.getElementById('sHist').innerHTML='';
+    return;
+  }
+  var mes=document.getElementById('hMes')?document.getElementById('hMes').value:'';
+  if(!mes){document.getElementById('lHist').innerHTML='<div class="empty"><i class="fas fa-calendar"></i><p>Selecciona un mes</p></div>';return;}
+  var url=ST.gsUrl||GS_URL;
+  if(!url){renderHistLocal(mes);return;}
+  /* Calcular from/to del mes seleccionado */
+  var yr=parseInt(mes.split('-')[0]),mo=parseInt(mes.split('-')[1]);
+  var from=mes+'-01';
+  var lastDay=new Date(yr,mo,0).getDate();
+  var to=mes+'-'+(lastDay<10?'0':'')+lastDay;
+  setHBanner('load','Cargando desde Sheets...');
+  fetch(url+'?action=getPartes&from='+from+'&to='+to+'&_='+Date.now())
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(res){
+      if(res.status==='ok'&&Array.isArray(res.partes)){
+        /* Normalizar y filtrar por worker_id */
+        var todos=res.partes.map(function(p){return{
+          fe:sanitizeFecha(p.fecha||p.fe||''),ho:parseFloat(p.horas||p.ho)||0,
+          hi:sanitizeHora(p.inicio||p.hi||''),hf:sanitizeHora(p.fin||p.hf||''),
+          wid:String(p.worker_id||p.wid||''),wn:p.nombre||p.wn||'',
+          cn:p.cliente||p.cn||'',pn:p.proyecto||p.pn||'',
+          tt:p.tipo||p.tt||'',ti:p.tipo_id||p.ti||'',
+          ds:p.descripcion||p.ds||'',mt:p.material||p.mt||'',
+          ma:p.maquinaria||p.ma||'',ob:p.obs||p.ob||'',
+          aus_motivo:p.aus_motivo||'',hx:p.horas_extra==='SI'||p.hx||false,
+          pu:p.prod_unidad||p.pu||'',pq:parseInt(p.prod_cantidad||p.pq)||0
+        };});
+        var mine=todos.filter(function(p){return String(p.wid)===String(curW);});
+        /* Poblar selector de meses con todos los meses presentes en Sheets */
+        buildMesSel(todos);
+        document.getElementById('hMes').value=mes;
+        setHBanner('ok','Google Sheets · '+mine.length+' registros');
+        renderHistData(mine,mes);
+      } else throw new Error(res.msg||'sin partes');
+    })
+    .catch(function(err){
+      setHBanner('er','Sin conexión — mostrando datos locales');
+      renderHistLocal(mes);
     });
-    h+='</div>';
+}
+function renderHistLocal(mes){
+  var mine=P.filter(function(p){return String(p.wid)===String(curW)&&(p.fe||'').substring(0,7)===mes;});
+  buildMesSel(P.filter(function(p){return String(p.wid)===String(curW);}));
+  document.getElementById('hMes').value=mes;
+  renderHistData(mine,mes);
+}
+function renderHistData(pp,mes){
+  pp.sort(function(a,b){return b.fe.localeCompare(a.fe)||0;});
+  var tds=[],hxH=0,normH=0,ausN=0;
+  pp.forEach(function(p){
+    if(tds.indexOf(p.fe)<0&&p.ho>0) tds.push(p.fe);
+    if(p.tt==='Ausencia'){ausN++;return;}
+    /* Detectar HX: flag explícito O tipo HX O horario fuera de rango */
+    var esHXFlag=(p.hx||p.tt==='Horas Extra');
+    var esHXHorario=false;
+    if(!esHXFlag&&p.hi&&p.hf&&p.fe){
+      var res=calcHX(p.fe,p.hi,p.hf);
+      esHXHorario=(res.horasHX>0);
+    }
+    if(esHXFlag||esHXHorario) hxH+=p.ho;
+    else normH+=p.ho;
   });
+  document.getElementById('sHist').innerHTML=
+    '<div class="si"><div class="sv">'+normH.toFixed(1)+'</div><div class="sl">Horas norm.</div></div>'+
+    '<div class="si"><div class="sv">'+tds.length+'</div><div class="sl">Días trab.</div></div>'+
+    '<div class="si"><div class="sv">'+hxH.toFixed(1)+'</div><div class="sl">Horas extra</div></div>'+
+    '<div class="si"><div class="sv">'+ausN+'</div><div class="sl">Ausencias</div></div>';
+  var c=document.getElementById('lHist');
+  if(!pp.length){c.innerHTML='<div class="empty"><i class="fas fa-archive"></i><p>Sin registros este mes</p></div>';return;}
+  var w=null;for(var i=0;i<W.length;i++){if(String(W[i].id)===String(curW)){w=W[i];break;}}
+  /* Tabla compacta: una fila por entrada */
+  var h='<table style="width:100%;border-collapse:collapse;font-size:11px">';
+  h+='<thead><tr style="border-bottom:2px solid var(--bdr)">'
+    +'<th style="text-align:left;padding:5px 4px;font-size:9px;color:var(--muted);font-weight:700;white-space:nowrap">Fecha</th>'
+    +'<th style="text-align:left;padding:5px 4px;font-size:9px;color:var(--muted);font-weight:700">Tipo</th>'
+    +'<th style="text-align:left;padding:5px 4px;font-size:9px;color:var(--muted);font-weight:700">Descripción</th>'
+    +'<th style="text-align:right;padding:5px 4px;font-size:9px;color:var(--muted);font-weight:700;white-space:nowrap">H ini–fin</th>'
+    +'</tr></thead><tbody>';
+  pp.forEach(function(p){
+    var isAus=(p.tt==='Ausencia');
+    var isHXFlag=(p.hx||p.tt==='Horas Extra');
+    var isHXHorario=false;
+    if(!isHXFlag&&!isAus&&p.hi&&p.hf&&p.fe){
+      var hxCheck=calcHX(p.fe,p.hi,p.hf);
+      isHXHorario=(hxCheck.horasHX>0);
+    }
+    var isHX=isHXFlag||isHXHorario;
+    var rowBg=isAus?'#FFF1F2':isHX?'#FFF7ED':'';
+    var acColor=isAus?'var(--err)':isHX?'var(--acc2)':(w?w.c:'var(--acc)');
+    /* Fecha corta: "Lun 19" */
+    var fechaCorta='';
+    try{var dd=new Date(p.fe+'T12:00:00');var DS=['Do','Lu','Ma','Mi','Ju','Vi','Sa'];fechaCorta=DS[dd.getDay()]+' '+dd.getDate();}catch(e){fechaCorta=p.fe||'';}
+    /* Tipo abreviado + badge HX si detectado por horario */
+    var tipoCorto=isAus?'Aus':(p.tt||'').substring(0,10);
+    var hxBadge=isHXHorario?'<span style="font-size:8px;font-weight:700;color:var(--acc2);margin-left:3px">⚡HX</span>':'';
+    /* Descripción truncada */
+    var desc=(p.ds||'').substring(0,22)+(p.ds&&p.ds.length>22?'…':'');
+    /* Horas */
+    var horasCol=isAus?'—':(p.hi&&p.hf?(p.hi+'-'+p.hf):(p.ho?p.ho+'h':''));
+    h+='<tr style="border-bottom:1px solid var(--bdr);background:'+rowBg+'">'
+      +'<td style="padding:6px 4px;white-space:nowrap;font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:'+acColor+';font-weight:700">'+fechaCorta+'</td>'
+      +'<td style="padding:6px 4px;white-space:nowrap">'
+        +'<span style="font-size:9px;font-weight:700;color:'+acColor+'">'+esc(tipoCorto)+'</span>'+hxBadge
+      +'</td>'
+      +'<td style="padding:6px 4px;color:var(--fg);max-width:120px;overflow:hidden">'+esc(desc)
+        +(p.cn?'<br><span style="font-size:8px;color:var(--ok);font-weight:600">'+esc(p.cn.substring(0,14))+'</span>':'')
+        +(p.pn?'<span style="font-size:8px;color:var(--muted)"> / '+esc(p.pn.substring(0,12))+'</span>':'')
+        +(p.pu&&p.pq>0?'<br><span style="font-size:8px;color:var(--ok)">'+p.pq+' '+esc(p.pu)+'</span>':'')
+      +'</td>'
+      +'<td style="padding:6px 4px;text-align:right;white-space:nowrap;font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--acc);font-weight:600">'+esc(horasCol)+'</td>'
+      +'</tr>';
+  });
+  h+='</tbody></table>';
   c.innerHTML=h;
 }
  
@@ -1052,7 +1659,7 @@ function chkAdm(){
   } else {tst('PIN incorrecto','er');document.getElementById('aPi').value='';}
 }
 function rAdm(){
-  rLWk();rLTi();rLCl();rLPr();rLPre();rPSel();rClDL();rPrDL();ldQR();
+  rLWk();rLTi();rLCl();rLPr();rLPre();rLFest();rPSel();rClDL();rPrDL();ldQR();
   var g=document.getElementById('gsU'); if(g) g.value=ST.gsUrl||'';
   var em=document.getElementById('emD'); if(em) em.value=ST.email||'';
 }
@@ -1097,16 +1704,69 @@ function addPr(){var cid=document.getElementById('pClS').value,n=document.getEle
 function delPr(id){PR=PR.filter(function(p){return p.id!==id;});svR();rLPr();rPrDL();}
 /* Plantillas */
 function rLPre(){var fl={desc:'Descripción',mat:'Material',maq:'Maquinaria',obs:'Observaciones'};var h='';for(var k in fl){if(!fl.hasOwnProperty(k))continue;var it=PRE[k]||[];if(!it.length)continue;h+='<div style="margin-bottom:4px"><span style="font-size:9px;font-weight:700;color:var(--muted)">'+fl[k]+':</span>';it.forEach(function(t,i){h+='<div class="aim" style="margin-top:2px"><span class="n" style="font-size:10px">'+esc(t)+'</span><button type="button" onclick="delPre(\''+k+'\','+i+')"><i class="fas fa-times"></i></button></div>';});h+='</div>';}document.getElementById('lPre').innerHTML=h||'<span style="font-size:9px;color:var(--muted)">Sin plantillas</span>';}
-function addPre(){var c=document.getElementById('preF').value,t=document.getElementById('nPre').value.trim();if(!t)return;if(!PRE[c])PRE[c]=[];PRE[c].push(t);svPre();document.getElementById('nPre').value='';rLPre();rSug();tst('Plantilla añadida','ok');}
+function addPre(){
+  var c=document.getElementById('preF').value;
+  var t=document.getElementById('nPre').value.trim().toLowerCase();
+  if(!t)return;
+  if(!PRE[c])PRE[c]=[];
+  if(PRE[c].indexOf(t)>=0){tst('Ya existe esa plantilla','inf');return;}
+  PRE[c].push(t);svPre();
+  document.getElementById('nPre').value='';
+  rLPre();rSug();
+  gsPost('addPlantilla',{id:'pl'+Date.now(),campo:c,texto:t,activo:true});
+  tst('Plantilla añadida','ok');
+}
 function delPre(c,i){PRE[c].splice(i,1);svPre();rLPre();rSug();}
 function chPi(){var v=document.getElementById('nPi').value.trim();if(v.length<4){tst('Mínimo 4 caracteres','er');return;}ST.pin=v;svS();document.getElementById('nPi').value='';tst('PIN cambiado','ok');}
-function clrAll(){if(!P.length){tst('No hay datos locales','inf');return;}P=[];svP();rHoy();rHist();uSB();tst('Partes locales borrados','inf');}
+function clrAll(){if(!P.length){tst('No hay datos locales','inf');return;}P=[];svP();rHoy();uSB();tst('Partes locales borrados','inf');}
+
+/* ============================================================
+   FESTIVOS
+============================================================ */
+function rLFest(){
+  var c=document.getElementById('lFest'); if(!c)return;
+  var sorted=FEST.slice().sort();
+  if(!sorted.length){c.innerHTML='<span style="font-size:9px;color:var(--muted)">Sin festivos registrados</span>';return;}
+  c.innerHTML=sorted.map(function(f){
+    var d=new Date(f+'T12:00:00');
+    var DIAS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+    var MNOM=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    var lbl=DIAS[d.getDay()]+' '+d.getDate()+' '+MNOM[d.getMonth()]+' '+d.getFullYear();
+    return'<div class="aim"><span class="n" style="font-size:10px"><i class="fas fa-calendar-times" style="color:var(--err);margin-right:4px;font-size:9px"></i>'+lbl+'</span>'
+      +'<button type="button" onclick="delFest(\''+f+'\')"><i class="fas fa-times"></i></button></div>';
+  }).join('');
+}
+function addFest(){
+  var v=document.getElementById('nFest').value;
+  if(!v){tst('Selecciona una fecha','er');return;}
+  if(FEST.indexOf(v)>=0){tst('Ya está en la lista','inf');return;}
+  FEST.push(v);svFest();document.getElementById('nFest').value='';rLFest();tst('Festivo añadido','ok');
+}
+function delFest(f){FEST=FEST.filter(function(x){return x!==f;});svFest();rLFest();}
+function addFestBulk(arr){
+  arr.forEach(function(f){if(FEST.indexOf(f)<0)FEST.push(f);});
+  svFest();rLFest();tst(arr.length+' festivos cargados','ok');
+}
+function addFestivos2025(){
+  addFestBulk([
+    '2025-01-01','2025-01-06','2025-03-19','2025-04-17','2025-04-18',
+    '2025-05-01','2025-06-19','2025-08-15','2025-10-09','2025-10-12',
+    '2025-11-01','2025-12-06','2025-12-08','2025-12-25'
+  ]);
+}
+function addFestivos2026(){
+  addFestBulk([
+    '2026-01-01','2026-01-06','2026-03-19','2026-04-02','2026-04-03',
+    '2026-05-01','2026-06-04','2026-08-15','2026-10-09','2026-10-12',
+    '2026-11-01','2026-12-06','2026-12-08','2026-12-25'
+  ]);
+}
  
 /* CSV / EMAIL */
 function gCSV(){
   var src=(PD_src==='sheets'&&PD.length)?PD:P;
-  var s=';',hd=['Fecha','Trabajador','Cliente','Proyecto','Tipo','Inicio','Fin','Horas','Descripcion','Material','Maquinaria','Obs'];
-  var rows=src.slice().sort(function(a,b){return(a.fe||'').localeCompare(b.fe||'');}).map(function(p){return[p.fe,p.wn,'"'+(p.cn||'')+'"','"'+(p.pn||'')+'"',p.tt,p.hi,p.hf,p.ho,'"'+(p.ds||'')+'"','"'+(p.mt||'')+'"','"'+(p.ma||'')+'"','"'+(p.ob||'')+'"'].join(s);});
+  var s=';',hd=['Fecha','Trabajador','Cliente','Proyecto','Tipo','Inicio','Fin','Horas','Descripcion','Material','Maquinaria','Obs','Aus_Motivo','Horas_Extra','Prod_Unidad','Prod_Cantidad'];
+  var rows=src.slice().sort(function(a,b){return(a.fe||'').localeCompare(b.fe||'');}).map(function(p){return[p.fe,p.wn,'"'+(p.cn||'')+'"','"'+(p.pn||'')+'"',p.tt,p.hi||'',p.hf||'',p.ho,'"'+(p.ds||'')+'"','"'+(p.mt||'')+'"','"'+(p.ma||'')+'"','"'+(p.ob||'')+'"',p.aus_motivo||'',p.hx?'SI':'',p.pu||'',p.pq||0].join(s);});
   return hd.join(s)+'\n'+rows.join('\n');
 }
 function dlCSV(){var src=(PD_src==='sheets'&&PD.length)?PD:P;if(!src.length){tst('No hay datos','er');return;}var blob=new Blob(['\uFEFF'+gCSV()],{type:'text/csv;charset=utf-8;'});var u=URL.createObjectURL(blob);var a=document.createElement('a');a.href=u;a.download='partes_'+tod()+'.csv';a.click();URL.revokeObjectURL(u);tst('CSV descargado','ok');}
@@ -1121,16 +1781,25 @@ function ldQR(){var url=location.href;var img=document.getElementById('qrI');if(
 try{
   var td=tod();
   document.getElementById('fF').value=td;
-  var d7=new Date(); d7.setDate(d7.getDate()-7);
-  document.getElementById('hD').value=d7.toISOString().split('T')[0];
-  document.getElementById('hH').value=td;
   var d30=new Date(); d30.setDate(d30.getDate()-30);
   document.getElementById('dD1').value=d30.toISOString().split('T')[0];
   document.getElementById('dD2').value=td;
   document.getElementById('aPi').onkeydown=function(e){if(e.key==='Enter')chkAdm();};
-  rWG(); rTC(); rClDL(); rPrDL(); rSug(); rHoy(); rHist(); uSB(); ldQR();
+  /* Garantía final: si W sigue vacío o null por cualquier motivo, restaurar DEF */
+  if(!W||!Array.isArray(W)||W.length===0){
+    W=JSON.parse(JSON.stringify(W_DEF));
+  }
+  /* Garantía: todos los de W_DEF deben estar en W */
+  W_DEF.forEach(function(wd){
+    var ok=false;for(var i=0;i<W.length;i++){if(String(W[i].id)===String(wd.id)){ok=true;break;}}
+    if(!ok)W.push(JSON.parse(JSON.stringify(wd)));
+  });
+  poblarMesSel();
+  rWG(); rTC(); rClDL(); rPrDL(); rSug(); rHoy(); uSB(); ldQR();
+  /* Sync config en background — silencioso, sin bloquear UI */
+  setTimeout(function(){syncConfig(false);}, 1200);
 }catch(e){
-  document.body.innerHTML='<div style="padding:40px;color:red;font-family:sans-serif"><b>Error init:</b><br>'+e.message+'</div>';
+  document.body.innerHTML='<div style="padding:40px;color:red;font-family:sans-serif"><b>Error init:</b><br>'+e.message+'<br><small>'+e.stack+'</small></div>';
 }
 </script>
 </body>

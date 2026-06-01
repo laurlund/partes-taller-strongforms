@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#FFFFFF">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Partes — Taller Metálico</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -492,7 +495,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
      <button class="bt bt2 bts" onclick="addFestivos2026()" style="flex:1;font-size:9px"><i class="fas fa-calendar"></i> Cargar festivos CV 2026</button>
     </div>
    </div>
-
+ 
    <div class="sec"><i class="fas fa-key"></i> PIN admin</div>
    <div class="aad" style="margin-bottom:10px">
     <input type="password" id="nPi" placeholder="Nuevo PIN (mín 4 caract.)">
@@ -943,24 +946,37 @@ function rSug(){
 }
 function flF(id,txt){var el=document.getElementById(id);if(el){var v=txt.toLowerCase();el.value=el.value.trim()?el.value.trim()+', '+v:v;el.focus();}}
 function poblarMesSel(){
-  /* Rellena el selector con los últimos 6 meses como opciones base */
-  var sel=document.getElementById('hMes'); if(!sel||sel.options.length>1)return;
+  /* Rellena el selector con TODOS los meses que tienen partes en localStorage
+     para el trabajador activo. Si no hay datos locales, genera los últimos 12 meses.
+     Preselecciona el mes más reciente con datos. */
+  var sel=document.getElementById('hMes'); if(!sel)return;
   var MNOM=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  var now=new Date();
-  var opts='<option value="">Selecciona un mes...</option>';
-  for(var i=0;i<6;i++){
-    var d=new Date(now.getFullYear(),now.getMonth()-i,1);
-    var val=d.getFullYear()+'-'+(d.getMonth()<9?'0':'')+(d.getMonth()+1);
-    var lbl=MNOM[d.getMonth()]+' '+d.getFullYear();
-    opts+='<option value="'+val+'"'+(i===0?' selected':'')+'>'+lbl+'</option>';
+  var meses={};
+  /* Recoger meses reales del trabajador activo en localStorage */
+  var fuente=curW?P.filter(function(p){return String(p.wid)===String(curW);}):P;
+  fuente.forEach(function(p){if(p.fe&&p.fe.length>=7){meses[p.fe.substring(0,7)]=true;}});
+  var arr=Object.keys(meses).sort(function(a,b){return b.localeCompare(a);});
+  /* Si no hay ningún dato local, generar los últimos 12 meses como fallback */
+  if(!arr.length){
+    var now=new Date();
+    for(var i=0;i<12;i++){
+      var d=new Date(now.getFullYear(),now.getMonth()-i,1);
+      arr.push(d.getFullYear()+'-'+(d.getMonth()<9?'0':'')+(d.getMonth()+1));
+    }
   }
-  sel.innerHTML=opts;
+  /* El mes a preseleccionar es el más reciente con datos (arr[0]) */
+  var selVal=arr[0]||'';
+  sel.innerHTML='<option value="">Selecciona un mes...</option>'+arr.map(function(m){
+    var parts=m.split('-');
+    var lbl=MNOM[parseInt(parts[1])-1]+' '+parts[0];
+    return'<option value="'+m+'"'+(m===selVal?' selected':'')+'>'+lbl+'</option>';
+  }).join('');
 }
 function calcH(){
   var i=document.getElementById('eI').value,f=document.getElementById('eF').value;
   if(i&&f){var a=i.split(':'),b=f.split(':');var h=(parseInt(b[0])*60+parseInt(b[1])-parseInt(a[0])*60-parseInt(a[1]))/60;if(h<0)h+=24;document.getElementById('eH').value=Math.max(0,h).toFixed(1);}
 }
-
+ 
 /* ============================================================
    MOTOR HX — detecta y divide horas normales / extra
    Horario normal: 06:00-14:00 L-V, días no festivos
@@ -1017,7 +1033,7 @@ function calcHX(fecha, inicioStr, finStr){
 }
 function minsToTime(m){m=m%1440;var h=Math.floor(m/60),mn=m%60;return(h<10?'0':'')+h+':'+(mn<10?'0':'')+mn;}
 function fmt2(n){return n%1===0?n.toFixed(0):n.toFixed(1);}
-
+ 
 /* Popup de confirmación HX — llama cb(confirmed) */
 function showHXConfirm(info, cb){
   var ov=document.createElement('div'); ov.className='pov'; ov.id='hxOv';
@@ -1063,7 +1079,7 @@ function saveE(){
   var w=null; for(var i=0;i<W.length;i++){if(String(W[i].id)===String(curW)){w=W[i];break;}}
   var tipo=null; for(var i=0;i<TT.length;i++){if(TT[i].id===curT){tipo=TT[i];break;}}
   if(!w||!tipo){tst('Error interno','er');return;}
-
+ 
   /* AUSENCIA */
   if(curT==='ausencia'){
     if(!ausMot){tst('Indica el motivo de la ausencia','er');return;}
@@ -1077,19 +1093,19 @@ function saveE(){
     tst('Ausencia registrada','ok');
     shV('jor'); uSB(); return;
   }
-
+ 
   var horas=parseFloat(document.getElementById('eH').value);
   if(!horas||horas<=0){tst('Indica las horas','er');return;}
   var desc=(document.getElementById('eD').value.trim()).toLowerCase();
   if(!desc){tst('Añade descripción','er');return;}
-
+ 
   /* Si el usuario ya eligió manualmente Horas Extra, saltar análisis automático */
   if(curT==='horas_x'){
     if(!proTx&&!cliTx){tst('Las Horas Extra deben vincularse a proyecto o cliente','er');return;}
     _commitEntrada(w,tipo,td,inicio,fin,horas,desc,mat,maq,obs,cliTx,proTx,puVal,pqVal,true);
     return;
   }
-
+ 
   /* ANÁLISIS HX AUTOMÁTICO */
   if(!inicio||!fin){
     _commitEntrada(w,tipo,td,inicio,fin,horas,desc,mat,maq,obs,cliTx,proTx,puVal,pqVal,false);
@@ -1184,7 +1200,7 @@ function sndGS(p){
     }})
   }).then(function(){p.sy=true;svP();uSB();}).catch(function(){p.sy=false;svP();uSB();});
 }
-
+ 
 function tGS(){
   var url=ST.gsUrl||GS_URL; if(!url){tst('Sin URL','er');return;}
   tst('Probando...','inf');
@@ -1193,7 +1209,7 @@ function tGS(){
     .then(function(d){tst(d.status==='ok'?'Conexión OK ✓':'Error: '+(d.msg||'sin status'), d.status==='ok'?'ok':'er');})
     .catch(function(){tst('Sin respuesta — comprueba la URL','er');});
 }
-
+ 
 /* ============================================================
    SYNC CONFIG DESDE SHEETS
    Descarga: trabajadores, tipos, clientes, proyectos, plantillas.
@@ -1729,7 +1745,7 @@ function addPre(){
 function delPre(c,i){PRE[c].splice(i,1);svPre();rLPre();rSug();}
 function chPi(){var v=document.getElementById('nPi').value.trim();if(v.length<4){tst('Mínimo 4 caracteres','er');return;}ST.pin=v;svS();document.getElementById('nPi').value='';tst('PIN cambiado','ok');}
 function clrAll(){if(!P.length){tst('No hay datos locales','inf');return;}P=[];svP();rHoy();uSB();tst('Partes locales borrados','inf');}
-
+ 
 /* ============================================================
    FESTIVOS
 ============================================================ */

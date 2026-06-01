@@ -946,31 +946,7 @@ function rSug(){
 }
 function flF(id,txt){var el=document.getElementById(id);if(el){var v=txt.toLowerCase();el.value=el.value.trim()?el.value.trim()+', '+v:v;el.focus();}}
 function poblarMesSel(){
-  /* Rellena el selector con TODOS los meses que tienen partes en localStorage
-     para el trabajador activo. Si no hay datos locales, genera los últimos 12 meses.
-     Preselecciona el mes más reciente con datos. */
-  var sel=document.getElementById('hMes'); if(!sel)return;
-  var MNOM=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  var meses={};
-  /* Recoger meses reales del trabajador activo en localStorage */
-  var fuente=curW?P.filter(function(p){return String(p.wid)===String(curW);}):P;
-  fuente.forEach(function(p){if(p.fe&&p.fe.length>=7){meses[p.fe.substring(0,7)]=true;}});
-  var arr=Object.keys(meses).sort(function(a,b){return b.localeCompare(a);});
-  /* Si no hay ningún dato local, generar los últimos 12 meses como fallback */
-  if(!arr.length){
-    var now=new Date();
-    for(var i=0;i<12;i++){
-      var d=new Date(now.getFullYear(),now.getMonth()-i,1);
-      arr.push(d.getFullYear()+'-'+(d.getMonth()<9?'0':'')+(d.getMonth()+1));
-    }
-  }
-  /* El mes a preseleccionar es el más reciente con datos (arr[0]) */
-  var selVal=arr[0]||'';
-  sel.innerHTML='<option value="">Selecciona un mes...</option>'+arr.map(function(m){
-    var parts=m.split('-');
-    var lbl=MNOM[parseInt(parts[1])-1]+' '+parts[0];
-    return'<option value="'+m+'"'+(m===selVal?' selected':'')+'>'+lbl+'</option>';
-  }).join('');
+  /* No-op: el selector se rellena desde Sheets en rHist() */
 }
 function calcH(){
   var i=document.getElementById('eI').value,f=document.getElementById('eF').value;
@@ -1554,55 +1530,86 @@ function setHBanner(state,msg){
 }
 function rHist(){
   if(!curW){
-    /* Sin trabajador logueado: mostrar mensaje */
     document.getElementById('lHist').innerHTML='<div class="empty"><i class="fas fa-user"></i><p>Entra con tu nombre para ver tu historial</p></div>';
     document.getElementById('sHist').innerHTML='';
     return;
   }
-  var mes=document.getElementById('hMes')?document.getElementById('hMes').value:'';
-  if(!mes){document.getElementById('lHist').innerHTML='<div class="empty"><i class="fas fa-calendar"></i><p>Selecciona un mes</p></div>';return;}
   var url=ST.gsUrl||GS_URL;
-  if(!url){renderHistLocal(mes);return;}
-  /* Calcular from/to del mes seleccionado */
-  var yr=parseInt(mes.split('-')[0]),mo=parseInt(mes.split('-')[1]);
-  var from=mes+'-01';
-  var lastDay=new Date(yr,mo,0).getDate();
-  var to=mes+'-'+(lastDay<10?'0':'')+lastDay;
+  var MNOM=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var mes=document.getElementById('hMes')?document.getElementById('hMes').value:'';
+ 
+  if(!url){
+    /* Sin URL configurada: caer a localStorage */
+    _rHistLocal(mes);
+    return;
+  }
+ 
+  /* Cargar TODOS los partes del trabajador desde Sheets (sin filtro de fecha) */
   setHBanner('load','Cargando desde Sheets...');
-  fetch(url+'?action=getPartes&from='+from+'&to='+to+'&_='+Date.now())
+  fetch(url+'?action=getPartes&from=2000-01-01&to=2099-12-31&_='+Date.now())
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(function(res){
       if(res.status==='ok'&&Array.isArray(res.partes)){
-        /* Normalizar y filtrar por worker_id */
+        /* Normalizar y filtrar por este trabajador */
         var todos=res.partes.map(function(p){return{
           fe:sanitizeFecha(p.fecha||p.fe||''),ho:parseFloat(p.horas||p.ho)||0,
           hi:sanitizeHora(p.inicio||p.hi||''),hf:sanitizeHora(p.fin||p.hf||''),
           wid:String(p.worker_id||p.wid||''),wn:p.nombre||p.wn||'',
           cn:p.cliente||p.cn||'',pn:p.proyecto||p.pn||'',
-          tt:p.tipo||p.tt||'',ti:p.tipo_id||p.ti||'',
-          ds:p.descripcion||p.ds||'',mt:p.material||p.mt||'',
-          ma:p.maquinaria||p.ma||'',ob:p.obs||p.ob||'',
-          aus_motivo:p.aus_motivo||'',hx:p.horas_extra==='SI'||p.hx||false,
+          tt:p.tipo||p.tt||'',ds:p.descripcion||p.ds||'',
+          mt:p.material||p.mt||'',ma:p.maquinaria||p.ma||'',
+          ob:p.obs||p.ob||'',aus_motivo:p.aus_motivo||'',
+          hx:p.horas_extra==='SI'||p.hx||false,
           pu:p.prod_unidad||p.pu||'',pq:parseInt(p.prod_cantidad||p.pq)||0
-        };});
+        };}).filter(function(p){return p.fe;});
         var mine=todos.filter(function(p){return String(p.wid)===String(curW);});
-        /* Poblar selector de meses con todos los meses presentes en Sheets */
-        buildMesSel(todos);
-        document.getElementById('hMes').value=mes;
-        setHBanner('ok','Google Sheets · '+mine.length+' registros');
-        renderHistData(mine,mes);
-      } else throw new Error(res.msg||'sin partes');
+ 
+        /* Construir selector con TODOS los meses que tiene este trabajador */
+        var meses={};
+        mine.forEach(function(p){if(p.fe.length>=7)meses[p.fe.substring(0,7)]=true;});
+        var arr=Object.keys(meses).sort(function(a,b){return b.localeCompare(a);});
+        var sel=document.getElementById('hMes');
+        if(sel&&arr.length){
+          /* Preseleccionar: el mes que ya tenía elegido, o el más reciente */
+          var selVal=mes&&meses[mes]?mes:arr[0];
+          sel.innerHTML='<option value="">Selecciona un mes...</option>'+arr.map(function(m){
+            var pts=m.split('-');
+            var lbl=MNOM[parseInt(pts[1])-1]+' '+pts[0];
+            return'<option value="'+m+'"'+(m===selVal?' selected':'')+'>'+lbl+'</option>';
+          }).join('');
+          mes=selVal;
+        }
+ 
+        /* Filtrar por mes seleccionado y renderizar */
+        var filtrado=mes?mine.filter(function(p){return p.fe.substring(0,7)===mes;}):mine;
+        setHBanner('ok','Sheets · '+mine.length+' registros totales');
+        renderHistData(filtrado,mes);
+      } else throw new Error(res.msg||'sin datos');
     })
     .catch(function(err){
-      setHBanner('er','Sin conexión — mostrando datos locales');
-      renderHistLocal(mes);
+      setHBanner('er','Sin conexión — datos locales');
+      _rHistLocal(mes);
     });
 }
-function renderHistLocal(mes){
-  var mine=P.filter(function(p){return String(p.wid)===String(curW)&&(p.fe||'').substring(0,7)===mes;});
-  buildMesSel(P.filter(function(p){return String(p.wid)===String(curW);}));
-  document.getElementById('hMes').value=mes;
-  renderHistData(mine,mes);
+function _rHistLocal(mes){
+  /* Fallback: usar localStorage cuando no hay conexión a Sheets */
+  var MNOM=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var mine=P.filter(function(p){return String(p.wid)===String(curW);});
+  var meses={};
+  mine.forEach(function(p){if(p.fe&&p.fe.length>=7)meses[p.fe.substring(0,7)]=true;});
+  var arr=Object.keys(meses).sort(function(a,b){return b.localeCompare(a);});
+  var sel=document.getElementById('hMes');
+  if(sel&&arr.length){
+    var selVal=mes&&meses[mes]?mes:arr[0];
+    sel.innerHTML='<option value="">Selecciona un mes...</option>'+arr.map(function(m){
+      var pts=m.split('-');
+      var lbl=MNOM[parseInt(pts[1])-1]+' '+pts[0];
+      return'<option value="'+m+'"'+(m===selVal?' selected':'')+'>'+lbl+'</option>';
+    }).join('');
+    mes=selVal;
+  }
+  var filtrado=mes?mine.filter(function(p){return p.fe.substring(0,7)===mes;}):mine;
+  renderHistData(filtrado,mes);
 }
 function renderHistData(pp,mes){
   pp.sort(function(a,b){return b.fe.localeCompare(a.fe)||0;});
@@ -1820,7 +1827,6 @@ try{
     var ok=false;for(var i=0;i<W.length;i++){if(String(W[i].id)===String(wd.id)){ok=true;break;}}
     if(!ok)W.push(JSON.parse(JSON.stringify(wd)));
   });
-  poblarMesSel();
   rWG(); rTC(); rClDL(); rPrDL(); rSug(); rHoy(); uSB(); ldQR();
   /* Sync config en background — silencioso, sin bloquear UI */
   setTimeout(function(){syncConfig(false);}, 1200);

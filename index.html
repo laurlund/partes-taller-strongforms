@@ -1308,9 +1308,7 @@ function loadFromSheets(){
   var url=ST.gsUrl||GS_URL;
   if(!url){setBanner('warn','Sin URL — usando datos locales');PD=P.slice();PD_src='local';rDash();return;}
   setBanner('load','Descargando desde Sheets...');
-  var d90=new Date(); d90.setDate(d90.getDate()-90);
-  var from=d90.toISOString().split('T')[0], to=tod();
-  fetch(url+'?action=getPartes&from='+from+'&to='+to+'&_='+Date.now())
+  fetch(url+'?action=getPartes&from=2000-01-01&to=2099-12-31&_='+Date.now())
     .then(function(r){
       if(!r.ok) throw new Error('HTTP '+r.status);
       return r.json();
@@ -1337,10 +1335,9 @@ function loadFromSheets(){
         });
         PD_src='sheets';
         setBanner('ok','Google Sheets — '+PD.length+' registros (últimos 90 días)');
-        /* Ajustar filtros de fecha al último mes */
-        var d30=new Date(); d30.setDate(d30.getDate()-30);
-        document.getElementById('dD1').value=d30.toISOString().split('T')[0];
-        document.getElementById('dD2').value=tod();
+        /* Sin filtro de fecha por defecto — mostrar todo */
+        document.getElementById('dD1').value='';
+        document.getElementById('dD2').value='';
         rDash();
       } else if(res.status==='ok' && !res.partes) {
         /* Apps Script viejo (solo tiene sync, no getPartes) */
@@ -1814,9 +1811,9 @@ function ldQR(){var url=location.href;var img=document.getElementById('qrI');if(
 try{
   var td=tod();
   document.getElementById('fF').value=td;
-  var d30=new Date(); d30.setDate(d30.getDate()-30);
-  document.getElementById('dD1').value=d30.toISOString().split('T')[0];
-  document.getElementById('dD2').value=td;
+  /* Sin filtro de fecha por defecto */
+  document.getElementById('dD1').value='';
+  document.getElementById('dD2').value='';
   document.getElementById('aPi').onkeydown=function(e){if(e.key==='Enter')chkAdm();};
   /* Garantía final: si W sigue vacío o null por cualquier motivo, restaurar DEF */
   if(!W||!Array.isArray(W)||W.length===0){

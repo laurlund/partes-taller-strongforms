@@ -244,6 +244,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
     <button class="bt bt2 bts" onclick="shV('sel')" style="width:auto;margin-left:auto"><i class="fas fa-sign-out-alt"></i></button>
    </div>
    <div class="jst3" id="jSt"></div>
+   <div id="jFestBanner" style="display:none;margin:6px 0 10px;padding:10px 12px;background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:10px;font-size:11px;color:var(--acc);font-weight:700"><i class="fas fa-bolt"></i> Hoy es festivo — las horas se contarán como Horas Extra</div>
    <div class="sec"><i class="fas fa-list"></i> Entradas de hoy</div>
    <div id="jLi"></div>
    <button class="bt bt1" onclick="addEntry()" style="margin-top:8px"><i class="fas fa-plus"></i> Añadir entrada</button>
@@ -282,6 +283,15 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
    <div id="dHX" class="bylist"></div>
    <div class="sec"><i class="fas fa-user-slash" style="color:var(--err)"></i> Ausencias por trabajador</div>
    <div id="dAus" class="bylist"></div>
+   <div class="sec"><i class="fas fa-clipboard-check" style="color:var(--err)"></i> Control de marcaje semanal</div>
+   <div class="card" style="padding:10px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+     <button class="bt bt2 bts" onclick="semCtrl(-1)" style="width:auto;padding:6px 12px"><i class="fas fa-chevron-left"></i></button>
+     <div id="semLabel" style="flex:1;text-align:center;font-size:11px;font-weight:700;color:var(--fg)">—</div>
+     <button class="bt bt2 bts" onclick="semCtrl(1)" style="width:auto;padding:6px 12px" id="semNext"><i class="fas fa-chevron-right"></i></button>
+    </div>
+    <div id="tblCtrl" style="overflow-x:auto"></div>
+   </div>
    <div class="sec"><i class="fas fa-download"></i> Exportar</div>
    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
     <button class="bt bt2 bts" onclick="dlCSV()" style="flex:1"><i class="fas fa-file-csv"></i> CSV</button>
@@ -589,6 +599,7 @@ var view = 'sel'; /* vista actual dentro de pgNuevo */
 /* Partes del dashboard (de Sheets) — separados de P local */
 var PD = [];
 var PD_src = 'none'; /* 'sheets' | 'local' | 'none' */
+var semOffset = 0; /* semanas desde la actual: 0=esta semana, -1=anterior... */
  
 /* ============================================================
    UTILS
@@ -809,6 +820,9 @@ function rJor(){
   for(var i=0;i<W.length;i++){if(String(W[i].id)===String(curW)){w=W[i];break;}}
   if(!w) return;
   var td=tod();
+  /* Banner festivo */
+  var fb=document.getElementById('jFestBanner');
+  if(fb) fb.style.display=esDiaHX(td)?'block':'none';
   var my=P.filter(function(p){return String(p.wid)===String(curW)&&p.fe===td;});
   var totH=0; for(var i=0;i<my.length;i++) totH+=my[i].ho;
   var cls=[]; for(var i=0;i<my.length;i++){if(my[i].cn&&cls.indexOf(my[i].cn)<0)cls.push(my[i].cn);}
@@ -864,6 +878,9 @@ function addEntry(){
   var horasCard=document.getElementById('horasCard'); if(horasCard) horasCard.style.display='block';
   var detCard=document.getElementById('detalleCard'); if(detCard) detCard.style.display='block';
   var td=tod();
+  /* Banner festivo */
+  var fb=document.getElementById('jFestBanner');
+  if(fb) fb.style.display=esDiaHX(td)?'block':'none';
   var my=P.filter(function(p){return String(p.wid)===String(curW)&&p.fe===td;});
   if(my.length){
     var last=my.reduce(function(a,b){return a.id>b.id?a:b;});
@@ -1177,6 +1194,14 @@ function sndGS(p){
   }).then(function(){p.sy=true;svP();uSB();}).catch(function(){p.sy=false;svP();uSB();});
 }
  
+/* gsPost — envío genérico POST al Apps Script */
+function gsPost(action, data){
+  var url=ST.gsUrl||GS_URL; if(!url) return;
+  fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:action,data:data})
+  }).catch(function(){});
+}
+ 
 function tGS(){
   var url=ST.gsUrl||GS_URL; if(!url){tst('Sin URL','er');return;}
   tst('Probando...','inf');
@@ -1254,11 +1279,23 @@ function syncConfig(manual){
       /* Plantillas — CLAVE: esto es lo que faltaba */
       if(d.plantillas&&d.plantillas.length){
         var pre={desc:[],mat:[],maq:[],obs:[]};
+        var festivos=[];
         d.plantillas.forEach(function(pl){
-          var c=pl.campo; var t=(pl.texto||'').toLowerCase().trim();
-          if(pre[c]&&t&&pre[c].indexOf(t)<0) pre[c].push(t);
+          var c=pl.campo; var t=(pl.texto||'').trim();
+          if(c==='fest'){
+            /* Festivo: texto es YYYY-MM-DD */
+            if(t&&/^\d{4}-\d{2}-\d{2}$/.test(t)&&festivos.indexOf(t)<0) festivos.push(t);
+          } else {
+            var tl=t.toLowerCase();
+            if(pre[c]&&tl&&pre[c].indexOf(tl)<0) pre[c].push(tl);
+          }
         });
         PRE=pre; svPre(); rSug(); cambios.push('plantillas');
+        /* Actualizar FEST con los festivos de Sheets */
+        if(festivos.length){
+          festivos.forEach(function(f){if(FEST.indexOf(f)<0)FEST.push(f);});
+          FEST=festivos; svFest(); rLFest(); cambios.push('festivos('+festivos.length+')');
+        }
       }
       if(manual){
         tst(cambios.length?'Config actualizada: '+cambios.join(', '):'Sin cambios','ok');
@@ -1338,7 +1375,7 @@ function loadFromSheets(){
         /* Sin filtro de fecha por defecto — mostrar todo */
         document.getElementById('dD1').value='';
         document.getElementById('dD2').value='';
-        rDash();
+        rDash(); rCtrlSem();
       } else if(res.status==='ok' && !res.partes) {
         /* Apps Script viejo (solo tiene sync, no getPartes) */
         throw new Error('El script no tiene acción getPartes — redesplegar v3');
@@ -1348,10 +1385,119 @@ function loadFromSheets(){
     })
     .catch(function(err){
       console.warn('[Dashboard]',err.message);
-      PD=P.slice(); PD_src='local';
+      PD=P.slice(); PD_src='local'; rCtrlSem();
       setBanner('warn','Sin datos de Sheets ('+err.message+') — mostrando '+PD.length+' partes locales');
       rDash();
     });
+}
+ 
+/* ============================================================
+   CONTROL DE MARCAJE SEMANAL
+============================================================ */
+function semCtrl(dir){
+  semOffset+=dir;
+  /* No permitir ir al futuro */
+  if(semOffset>0) semOffset=0;
+  document.getElementById('semNext').disabled=(semOffset>=0);
+  rCtrlSem();
+}
+function getLunes(offset){
+  /* Devuelve el lunes de la semana actual + offset semanas */
+  var hoy=new Date(); hoy.setHours(0,0,0,0);
+  var dow=hoy.getDay(); /* 0=dom, 1=lun... */
+  var diffLunes=dow===0?-6:1-dow;
+  var lunes=new Date(hoy); lunes.setDate(hoy.getDate()+diffLunes+(offset*7));
+  return lunes;
+}
+function rCtrlSem(){
+  var DIAS_L=['Lun','Mar','Mié','Jue','Vie'];
+  var MNOM=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  var lunes=getLunes(semOffset);
+  /* Generar los 5 días laborables (L-V) */
+  var dias=[];
+  for(var i=0;i<5;i++){
+    var d=new Date(lunes); d.setDate(lunes.getDate()+i);
+    var iso=d.toISOString().split('T')[0];
+    dias.push({iso:iso, label:DIAS_L[i]+' '+d.getDate()});
+  }
+  /* Label de semana */
+  var fin=dias[4];
+  var lbl='Sem '+(semOffset===0?'actual':semOffset===-1?'anterior':semOffset+'')
+    +' · '+lunes.getDate()+' '+MNOM[lunes.getMonth()]+' — '+new Date(fin.iso+'T12:00').getDate()+' '+MNOM[new Date(fin.iso+'T12:00').getMonth()];
+  document.getElementById('semLabel').textContent=lbl;
+  /* Trabajadores activos excepto Sergio (id 9) */
+  var wks=W.filter(function(w){return String(w.id)!=='9';})
+           .sort(function(a,b){return a.n>b.n?1:-1;});
+  /* Datos disponibles en PD (ya cargados de Sheets) */
+  var src=PD.length?PD:P;
+  /* Construir set de presencia: wid+fecha */
+  var presente={};
+  src.forEach(function(p){
+    if(p.fe) presente[String(p.wid)+'_'+p.fe]=true;
+  });
+  /* Calcular días festivos de la semana */
+  var festSem={};
+  dias.forEach(function(d){if(FEST.indexOf(d.iso)>=0)festSem[d.iso]=true;});
+  /* Hoy para no marcar días futuros */
+  var hoyIso=tod();
+  /* Construir tabla */
+  var faltas=0;
+  var h='<table style="width:100%;border-collapse:collapse;font-size:10px">';
+  /* Cabecera */
+  h+='<thead><tr>';
+  h+='<th style="text-align:left;padding:5px 4px;font-size:9px;color:var(--muted);font-weight:700;min-width:70px">Trabajador</th>';
+  dias.forEach(function(d){
+    var esFest=festSem[d.iso];
+    var esFuturo=d.iso>hoyIso;
+    var col=esFest?'var(--muted)':esFuturo?'var(--bdr)':'var(--fg)';
+    h+='<th style="text-align:center;padding:5px 2px;font-size:9px;color:'+col+';font-weight:700;white-space:nowrap">'
+      +d.label+(esFest?' <i class="fas fa-umbrella-beach" style="font-size:7px"></i>':'')
+      +'</th>';
+  });
+  h+='</tr></thead><tbody>';
+  /* Filas por trabajador */
+  wks.forEach(function(w){
+    h+='<tr style="border-bottom:1px solid var(--bdr)">';
+    /* Nombre con avatar */
+    h+='<td style="padding:5px 4px">'
+      +'<div style="display:flex;align-items:center;gap:5px">'
+      +'<div style="width:20px;height:20px;border-radius:50%;background:'+w.c+';display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#fff;flex-shrink:0">'+w.ini+'</div>'
+      +'<span style="font-weight:600;color:var(--fg)">'+esc(w.n)+'</span>'
+      +'</div></td>';
+    dias.forEach(function(d){
+      var esFest=festSem[d.iso];
+      var esFuturo=d.iso>hoyIso;
+      var key=String(w.id)+'_'+d.iso;
+      if(esFest){
+        /* Festivo — celda gris */
+        h+='<td style="text-align:center;padding:5px 2px;background:var(--card2)">'
+          +'<span style="font-size:10px;color:var(--bdr)">—</span></td>';
+      } else if(esFuturo){
+        /* Día futuro — celda vacía */
+        h+='<td style="text-align:center;padding:5px 2px"></td>';
+      } else if(presente[key]){
+        /* Tiene parte ✅ */
+        h+='<td style="text-align:center;padding:5px 2px">'
+          +'<span style="font-size:13px;color:var(--ok)">✓</span></td>';
+      } else {
+        /* Falta ❌ */
+        faltas++;
+        h+='<td style="text-align:center;padding:5px 2px;background:#FEF2F2">'
+          +'<span style="font-size:11px;color:var(--err);font-weight:700">✗</span></td>';
+      }
+    });
+    h+='</tr>';
+  });
+  h+='</tbody></table>';
+  /* Resumen debajo */
+  if(faltas>0){
+    h+='<div style="margin-top:8px;padding:6px 10px;background:#FEF2F2;border-radius:8px;font-size:10px;color:var(--err);font-weight:700">'
+      +'<i class="fas fa-exclamation-circle"></i> '+faltas+' parte(s) sin registrar esta semana</div>';
+  } else {
+    h+='<div style="margin-top:8px;padding:6px 10px;background:#F0FDF4;border-radius:8px;font-size:10px;color:var(--ok);font-weight:700">'
+      +'<i class="fas fa-check-circle"></i> Todos los partes registrados ✓</div>';
+  }
+  document.getElementById('tblCtrl').innerHTML=h;
 }
  
 /* ============================================================
@@ -1770,12 +1916,21 @@ function addFest(){
   var v=document.getElementById('nFest').value;
   if(!v){tst('Selecciona una fecha','er');return;}
   if(FEST.indexOf(v)>=0){tst('Ya está en la lista','inf');return;}
-  FEST.push(v);svFest();document.getElementById('nFest').value='';rLFest();tst('Festivo añadido','ok');
+  FEST.push(v);svFest();document.getElementById('nFest').value='';rLFest();
+  /* Sincronizar a Sheets — plantillas campo=fest */
+  gsPost('addPlantilla',{id:'fest_'+v,campo:'fest',texto:v,activo:true});
+  tst('Festivo añadido','ok');
 }
 function delFest(f){FEST=FEST.filter(function(x){return x!==f;});svFest();rLFest();}
 function addFestBulk(arr){
-  arr.forEach(function(f){if(FEST.indexOf(f)<0)FEST.push(f);});
-  svFest();rLFest();tst(arr.length+' festivos cargados','ok');
+  var nuevos=[];
+  arr.forEach(function(f){if(FEST.indexOf(f)<0){FEST.push(f);nuevos.push(f);}});
+  svFest();rLFest();
+  /* Sincronizar a Sheets los que no estaban */
+  nuevos.forEach(function(f){
+    gsPost('addPlantilla',{id:'fest_'+f,campo:'fest',texto:f,activo:true});
+  });
+  tst(arr.length+' festivos cargados','ok');
 }
 function addFestivos2025(){
   addFestBulk([

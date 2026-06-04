@@ -1402,8 +1402,11 @@ function semCtrl(dir){
   rCtrlSem();
 }
 function getLunes(offset){
-  /* Devuelve el lunes de la semana actual + offset semanas */
-  var hoy=new Date(); hoy.setHours(0,0,0,0);
+  /* Devuelve el lunes de la semana actual + offset semanas
+     FIX: usar fecha local para evitar desfase UTC en España (UTC+2) */
+  var ahora=new Date();
+  /* Construir fecha local sin conversión UTC */
+  var hoy=new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
   var dow=hoy.getDay(); /* 0=dom, 1=lun... */
   var diffLunes=dow===0?-6:1-dow;
   var lunes=new Date(hoy); lunes.setDate(hoy.getDate()+diffLunes+(offset*7));
@@ -1417,7 +1420,8 @@ function rCtrlSem(){
   var dias=[];
   for(var i=0;i<5;i++){
     var d=new Date(lunes); d.setDate(lunes.getDate()+i);
-    var iso=d.toISOString().split('T')[0];
+    /* FIX: usar fecha local para evitar desfase UTC+2 */
+    var iso=d.getFullYear()+'-'+(d.getMonth()<9?'0':'')+(d.getMonth()+1)+'-'+(d.getDate()<10?'0':'')+d.getDate();
     dias.push({iso:iso, label:DIAS_L[i]+' '+d.getDate()});
   }
   /* Label de semana */

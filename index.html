@@ -302,6 +302,14 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
   </div>
  
   <div id="vFrm" style="display:none">
+   <div class="sec"><i class="fas fa-calendar-alt"></i> Fecha del parte</div>
+   <div class="card" style="padding:10px 12px">
+    <div style="display:flex;align-items:center;gap:8px">
+     <input type="date" id="eFecha" style="flex:1;background:#fff;border:1.5px solid var(--bdr);border-radius:8px;padding:8px 10px;color:var(--fg);font-family:inherit;font-size:14px" onchange="chkFecha()">
+     <button class="bt bt2 bts" onclick="document.getElementById('eFecha').value=tod();chkFecha()" style="width:auto;padding:7px 10px"><i class="fas fa-calendar-day"></i></button>
+    </div>
+    <div id="fechaAviso" style="display:none;margin-top:8px;padding:7px 10px;background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:8px;font-size:10px;color:var(--acc);font-weight:700"><i class="fas fa-exclamation-triangle"></i> Estás registrando un parte de otro día — revisa las horas</div>
+   </div>
    <div class="sec"><i class="fas fa-wrench"></i> Tipo de trabajo</div>
    <div class="tcg" id="tcG"></div>
    <div class="sec"><i class="fas fa-building"></i> Cliente / Proyecto</div>
@@ -865,6 +873,8 @@ function addEntry(){
   ['eD','eM','eQ','eO'].forEach(function(x){var el=document.getElementById(x);if(el)el.value='';});
   document.getElementById('selC').value='';
   document.getElementById('selP').value='';
+  document.getElementById('eFecha').value=tod();
+  var av=document.getElementById('fechaAviso');if(av)av.style.display='none';
   document.getElementById('eI').value='06:00';
   document.getElementById('eF').value='14:00';
   document.getElementById('eH').value='8';
@@ -965,6 +975,11 @@ function flF(id,txt){var el=document.getElementById(id);if(el){var v=txt.toLower
 function poblarMesSel(){
   /* No-op: el selector se rellena desde Sheets en rHist() */
 }
+function chkFecha(){
+  var v=document.getElementById('eFecha').value;
+  var av=document.getElementById('fechaAviso');
+  if(av) av.style.display=(v&&v!==tod())?'block':'none';
+}
 function calcH(){
   var i=document.getElementById('eI').value,f=document.getElementById('eF').value;
   if(i&&f){var a=i.split(':'),b=f.split(':');var h=(parseInt(b[0])*60+parseInt(b[1])-parseInt(a[0])*60-parseInt(a[1]))/60;if(h<0)h+=24;document.getElementById('eH').value=Math.max(0,h).toFixed(1);}
@@ -1058,7 +1073,7 @@ function showHXConfirm(info, cb){
 function saveE(){
   if(!curW){tst('Selecciona trabajador','er');return;}
   if(!curT){tst('Selecciona tipo de trabajo','er');return;}
-  var td=tod();
+  var td=document.getElementById('eFecha').value||tod();
   var inicio=document.getElementById('eI').value;
   var fin=document.getElementById('eF').value;
   var mat=(document.getElementById('eM').value.trim()).toLowerCase();

@@ -5,10 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#FFFFFF">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-<title>Partes — Taller Metálico</title>
+<title>Partes — Strongforms v5</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
@@ -220,7 +217,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
 <header class="hdr">
  <button class="bk" id="bkBtn" onclick="goBack()"><i class="fas fa-arrow-left"></i></button>
  <div class="logo"><i class="fas fa-fire"></i></div>
- <div><h1>Taller Metálico</h1><span>Partes diarios</span></div>
+ <div><h1>Strongforms</h1><span>Partes diarios · v5</span></div>
  <div class="sb loc" id="sb"><i class="fas fa-hdd"></i> Local</div>
 </header>
  
@@ -244,7 +241,6 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
     <button class="bt bt2 bts" onclick="shV('sel')" style="width:auto;margin-left:auto"><i class="fas fa-sign-out-alt"></i></button>
    </div>
    <div class="jst3" id="jSt"></div>
-   <div id="jFestBanner" style="display:none;margin:6px 0 10px;padding:10px 12px;background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:10px;font-size:11px;color:var(--acc);font-weight:700"><i class="fas fa-bolt"></i> Hoy es festivo — las horas se contarán como Horas Extra</div>
    <div class="sec"><i class="fas fa-list"></i> Entradas de hoy</div>
    <div id="jLi"></div>
    <button class="bt bt1" onclick="addEntry()" style="margin-top:8px"><i class="fas fa-plus"></i> Añadir entrada</button>
@@ -283,15 +279,6 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
    <div id="dHX" class="bylist"></div>
    <div class="sec"><i class="fas fa-user-slash" style="color:var(--err)"></i> Ausencias por trabajador</div>
    <div id="dAus" class="bylist"></div>
-   <div class="sec"><i class="fas fa-clipboard-check" style="color:var(--err)"></i> Control de marcaje semanal</div>
-   <div class="card" style="padding:10px">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-     <button class="bt bt2 bts" onclick="semCtrl(-1)" style="width:auto;padding:6px 12px"><i class="fas fa-chevron-left"></i></button>
-     <div id="semLabel" style="flex:1;text-align:center;font-size:11px;font-weight:700;color:var(--fg)">—</div>
-     <button class="bt bt2 bts" onclick="semCtrl(1)" style="width:auto;padding:6px 12px" id="semNext"><i class="fas fa-chevron-right"></i></button>
-    </div>
-    <div id="tblCtrl" style="overflow-x:auto"></div>
-   </div>
    <div class="sec"><i class="fas fa-download"></i> Exportar</div>
    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
     <button class="bt bt2 bts" onclick="dlCSV()" style="flex:1"><i class="fas fa-file-csv"></i> CSV</button>
@@ -302,20 +289,20 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
   </div>
  
   <div id="vFrm" style="display:none">
-   <div class="sec"><i class="fas fa-calendar-alt"></i> Fecha del parte</div>
-   <div class="card" style="padding:10px 12px">
-    <div style="display:flex;align-items:center;gap:8px">
-     <input type="date" id="eFecha" style="flex:1;background:#fff;border:1.5px solid var(--bdr);border-radius:8px;padding:8px 10px;color:var(--fg);font-family:inherit;font-size:14px" onchange="chkFecha()">
-     <button class="bt bt2 bts" onclick="document.getElementById('eFecha').value=tod();chkFecha()" style="width:auto;padding:7px 10px"><i class="fas fa-calendar-day"></i></button>
-    </div>
-    <div id="fechaAviso" style="display:none;margin-top:8px;padding:7px 10px;background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:8px;font-size:10px;color:var(--acc);font-weight:700"><i class="fas fa-exclamation-triangle"></i> Estás registrando un parte de otro día — revisa las horas</div>
-   </div>
    <div class="sec"><i class="fas fa-wrench"></i> Tipo de trabajo</div>
    <div class="tcg" id="tcG"></div>
    <div class="sec"><i class="fas fa-building"></i> Cliente / Proyecto</div>
    <div class="card"><div class="r2">
-    <div class="fld"><label>Cliente</label><input type="text" id="selC" list="dlCl" placeholder="Escribe o elige..."><datalist id="dlCl"></datalist></div>
-    <div class="fld"><label>Proyecto</label><input type="text" id="selP" list="dlPr" placeholder="Escribe o elige..."><datalist id="dlPr"></datalist></div>
+    <div class="fld"><label>Cliente</label>
+     <select id="selC">
+      <option value="">-- Sin cliente --</option>
+     </select>
+    </div>
+    <div class="fld"><label>Proyecto</label>
+     <select id="selP">
+      <option value="">-- Sin proyecto --</option>
+     </select>
+    </div>
    </div></div>
    <!-- Card especial: AUSENCIA -->
    <div id="ausCard" style="display:none">
@@ -467,8 +454,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
    <div class="sec"><i class="fas fa-folder-open"></i> Proyectos</div>
    <div id="lPr"></div>
    <div class="aad">
-    <select id="pClS" style="flex:.6"><option value="">Cliente...</option></select>
-    <input type="text" id="nPr" placeholder="Proyecto...">
+    <input type="text" id="nPr" placeholder="Nuevo proyecto...">
     <button class="bt bt1 bts" onclick="addPr()" style="width:auto;padding:6px 10px"><i class="fas fa-plus"></i></button>
    </div>
  
@@ -513,7 +499,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
      <button class="bt bt2 bts" onclick="addFestivos2026()" style="flex:1;font-size:9px"><i class="fas fa-calendar"></i> Cargar festivos CV 2026</button>
     </div>
    </div>
- 
+
    <div class="sec"><i class="fas fa-key"></i> PIN admin</div>
    <div class="aad" style="margin-bottom:10px">
     <input type="password" id="nPi" placeholder="Nuevo PIN (mín 4 caract.)">
@@ -540,7 +526,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
 /* ============================================================
    CONSTANTES
 ============================================================ */
-var GS_URL = 'https://script.google.com/macros/s/AKfycbwS1Ii9aJOmDsqpQybwA2XwkW7ifm8tx7MSDpBzzc_bkWlbAlauPgx_ZDcjdRJeE2ke/exec';
+var GS_URL = 'https://script.google.com/macros/s/AKfycbzWrlmGi5VQFXB3ZxdsP0ma39JeBm7D0EstfEgiDOjGX9SmGwnx_m8lOMG_8NTJAOc/exec';
 var DEFAULT_EMAIL = '';
 var COLS = ['#E8740C','#059669','#7C3AED','#0891B2','#D97706','#BE185D','#4F46E5','#DC2626','#15803D','#B45309','#0D9488','#9333EA'];
 var ICO  = ['fa-fire','fa-cut','fa-cogs','fa-tools','fa-paint-roller','fa-hammer','fa-truck','fa-warehouse','fa-map-marker-alt','fa-industry','fa-wrench','fa-broom','fa-ellipsis-h','fa-dolly'];
@@ -553,8 +539,8 @@ var W_DEF = [
   {id:5,n:'Abdoulie',  ini:'AB',c:'#D97706',pin:'ulie', admin:false},
   {id:6,n:'Alieu',     ini:'AI',c:'#BE185D',pin:'lieu', admin:false},
   {id:7,n:'Ismael',    ini:'IS',c:'#4F46E5',pin:'mael', admin:false},
-  {id:8,n:'Fernando',  ini:'FE',c:'#0F766E',pin:'ando', admin:false, jefe:true},
-  {id:9,n:'Sergio',    ini:'SE',c:'#DC2626',pin:'7777', admin:true}
+  {id:9,n:'Fernando',  ini:'FE',c:'#0F766E',pin:'ando', admin:false, jefe:true},
+  {id:8,n:'Sergio',    ini:'SE',c:'#DC2626',pin:'7777', admin:true}
 ];
  
 /* ============================================================
@@ -567,8 +553,8 @@ var ST  = ld('pt_s', {pin:'7777', gsUrl:'', email:''});
 var PRE = ld('pt_pre', {desc:[],mat:[],maq:[],obs:[]});
 var W   = ld('pt_w', null);
 if(!W||!Array.isArray(W)||!W.length) W=JSON.parse(JSON.stringify(W_DEF));
-var CL  = ld('pt_c', []);
-var PR  = ld('pt_py', []);
+var CL  = []; /* siempre desde Sheets — no localStorage */
+var PR  = []; /* siempre desde Sheets — no localStorage */
 var TT  = ld('pt_tt', null);
 var FEST= ld('pt_fest', []); /* Array de strings 'YYYY-MM-DD' — festivos */
  
@@ -607,7 +593,6 @@ var view = 'sel'; /* vista actual dentro de pgNuevo */
 /* Partes del dashboard (de Sheets) — separados de P local */
 var PD = [];
 var PD_src = 'none'; /* 'sheets' | 'local' | 'none' */
-var semOffset = 0; /* semanas desde la actual: 0=esta semana, -1=anterior... */
  
 /* ============================================================
    UTILS
@@ -673,8 +658,8 @@ function sanitizeHora(v){
 function fmtD(s){try{var d=new Date(s+'T12:00:00');return ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][d.getDay()]+' '+d.getDate()+' '+['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][d.getMonth()];}catch(e){return s;}}
 function esc(s){if(s==null)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function svP(){try{localStorage.setItem('pt_p',JSON.stringify(P));}catch(e){}}
-function svC(){try{localStorage.setItem('pt_c',JSON.stringify(CL));}catch(e){}}
-function svR(){try{localStorage.setItem('pt_py',JSON.stringify(PR));}catch(e){}}
+function svC(){} /* CL no se persiste en localStorage — viene de Sheets */
+function svR(){} /* PR no se persiste en localStorage — viene de Sheets */
 function svT(){try{localStorage.setItem('pt_tt',JSON.stringify(TT));}catch(e){}}
 function svPre(){try{localStorage.setItem('pt_pre',JSON.stringify(PRE));}catch(e){}}
 function svFest(){try{localStorage.setItem('pt_fest',JSON.stringify(FEST));}catch(e){}}
@@ -828,9 +813,6 @@ function rJor(){
   for(var i=0;i<W.length;i++){if(String(W[i].id)===String(curW)){w=W[i];break;}}
   if(!w) return;
   var td=tod();
-  /* Banner festivo */
-  var fb=document.getElementById('jFestBanner');
-  if(fb) fb.style.display=esDiaHX(td)?'block':'none';
   var my=P.filter(function(p){return String(p.wid)===String(curW)&&p.fe===td;});
   var totH=0; for(var i=0;i<my.length;i++) totH+=my[i].ho;
   var cls=[]; for(var i=0;i<my.length;i++){if(my[i].cn&&cls.indexOf(my[i].cn)<0)cls.push(my[i].cn);}
@@ -873,8 +855,6 @@ function addEntry(){
   ['eD','eM','eQ','eO'].forEach(function(x){var el=document.getElementById(x);if(el)el.value='';});
   document.getElementById('selC').value='';
   document.getElementById('selP').value='';
-  document.getElementById('eFecha').value=tod();
-  var av=document.getElementById('fechaAviso');if(av)av.style.display='none';
   document.getElementById('eI').value='06:00';
   document.getElementById('eF').value='14:00';
   document.getElementById('eH').value='8';
@@ -888,9 +868,6 @@ function addEntry(){
   var horasCard=document.getElementById('horasCard'); if(horasCard) horasCard.style.display='block';
   var detCard=document.getElementById('detalleCard'); if(detCard) detCard.style.display='block';
   var td=tod();
-  /* Banner festivo */
-  var fb=document.getElementById('jFestBanner');
-  if(fb) fb.style.display=esDiaHX(td)?'block':'none';
   var my=P.filter(function(p){return String(p.wid)===String(curW)&&p.fe===td;});
   if(my.length){
     var last=my.reduce(function(a,b){return a.id>b.id?a:b;});
@@ -911,6 +888,8 @@ function rTC(){
   var g=document.getElementById('tcG'); if(!g) return;
   var h='';
   for(var i=0;i<TT.length;i++){
+    /* Ocultar Horas Extra — se asigna automaticamente */
+    if(TT[i].id==='horas_x') continue;
     var on=(String(curT)===String(TT[i].id))?' on':'';
     h+='<button class="tc'+on+'" type="button" data-tid="'+TT[i].id+'" onclick="selT(\''+TT[i].id+'\')">';
     h+='<i class="fas '+TT[i].i+'"></i>'+esc(TT[i].l)+'</button>';
@@ -953,8 +932,26 @@ function selT(id){
 /* ============================================================
    DATALISTS + SUGERENCIAS
 ============================================================ */
-function rClDL(){var dl=document.getElementById('dlCl');if(!dl)return;dl.innerHTML=CL.map(function(c){return'<option value="'+esc(c.n)+'">';}).join('');}
-function rPrDL(){var dl=document.getElementById('dlPr');if(!dl)return;dl.innerHTML=PR.map(function(p){return'<option value="'+esc(p.n)+'">';}).join('');}
+function rClDL(){
+  /* Garantía: limpiar siempre el localStorage de clientes/proyectos */
+  try{['pt_c','pt_py','pt_cl','pt_pr','pt_clientes','pt_proyectos'].forEach(function(k){localStorage.removeItem(k);});}catch(e){}
+  var sel=document.getElementById('selC'); if(!sel)return;
+  var prev=sel.value;
+  sel.innerHTML='<option value="">-- Sin cliente --</option>'+
+    CL.slice().sort(function(a,b){return a.n.localeCompare(b.n);}).map(function(c){
+      return'<option value="'+c.id+'"'+(c.id===prev?' selected':'')+'>'+esc(c.n)+'</option>';
+    }).join('');
+  filtrarProyectosPorCliente();
+}
+function rPrDL(){filtrarProyectosPorCliente();}
+function filtrarProyectosPorCliente(){
+  var selP=document.getElementById('selP'); if(!selP)return;
+  var prev=selP.value;
+  selP.innerHTML='<option value="">-- Sin proyecto --</option>'+
+    PR.slice().sort(function(a,b){return a.n.localeCompare(b.n);}).map(function(p){
+      return'<option value="'+p.id+'"'+(p.id===prev?' selected':'')+'>'+esc(p.n)+'</option>';
+    }).join('');
+}
 function gSug(campo,lim){
   lim=lim||8;var fm={desc:'ds',mat:'mt',maq:'ma',obs:'ob'};var k=fm[campo]||campo;
   var freq={};
@@ -973,18 +970,24 @@ function rSug(){
 }
 function flF(id,txt){var el=document.getElementById(id);if(el){var v=txt.toLowerCase();el.value=el.value.trim()?el.value.trim()+', '+v:v;el.focus();}}
 function poblarMesSel(){
-  /* No-op: el selector se rellena desde Sheets en rHist() */
-}
-function chkFecha(){
-  var v=document.getElementById('eFecha').value;
-  var av=document.getElementById('fechaAviso');
-  if(av) av.style.display=(v&&v!==tod())?'block':'none';
+  /* Rellena el selector con los últimos 6 meses como opciones base */
+  var sel=document.getElementById('hMes'); if(!sel||sel.options.length>1)return;
+  var MNOM=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var now=new Date();
+  var opts='<option value="">Selecciona un mes...</option>';
+  for(var i=0;i<6;i++){
+    var d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    var val=d.getFullYear()+'-'+(d.getMonth()<9?'0':'')+(d.getMonth()+1);
+    var lbl=MNOM[d.getMonth()]+' '+d.getFullYear();
+    opts+='<option value="'+val+'"'+(i===0?' selected':'')+'>'+lbl+'</option>';
+  }
+  sel.innerHTML=opts;
 }
 function calcH(){
   var i=document.getElementById('eI').value,f=document.getElementById('eF').value;
   if(i&&f){var a=i.split(':'),b=f.split(':');var h=(parseInt(b[0])*60+parseInt(b[1])-parseInt(a[0])*60-parseInt(a[1]))/60;if(h<0)h+=24;document.getElementById('eH').value=Math.max(0,h).toFixed(1);}
 }
- 
+
 /* ============================================================
    MOTOR HX — detecta y divide horas normales / extra
    Horario normal: 06:00-14:00 L-V, días no festivos
@@ -1041,7 +1044,7 @@ function calcHX(fecha, inicioStr, finStr){
 }
 function minsToTime(m){m=m%1440;var h=Math.floor(m/60),mn=m%60;return(h<10?'0':'')+h+':'+(mn<10?'0':'')+mn;}
 function fmt2(n){return n%1===0?n.toFixed(0):n.toFixed(1);}
- 
+
 /* Popup de confirmación HX — llama cb(confirmed) */
 function showHXConfirm(info, cb){
   var ov=document.createElement('div'); ov.className='pov'; ov.id='hxOv';
@@ -1073,21 +1076,27 @@ function showHXConfirm(info, cb){
 function saveE(){
   if(!curW){tst('Selecciona trabajador','er');return;}
   if(!curT){tst('Selecciona tipo de trabajo','er');return;}
-  var td=document.getElementById('eFecha').value||tod();
+  var td=tod();
   var inicio=document.getElementById('eI').value;
   var fin=document.getElementById('eF').value;
   var mat=(document.getElementById('eM').value.trim()).toLowerCase();
   var maq=(document.getElementById('eQ').value.trim()).toLowerCase();
   var obs=(document.getElementById('eO').value.trim()).toLowerCase();
-  var cliTx=document.getElementById('selC').value.trim();
-  var proTx=document.getElementById('selP').value.trim();
+  var _selC=document.getElementById('selC');
+  var _selP=document.getElementById('selP');
+  var _cliId=_selC?_selC.value:'';
+  var _proId=_selP?_selP.value:'';
+  var _cliObj=CL.find(function(c){return c.id===_cliId;});
+  var _proObj=PR.find(function(p){return p.id===_proId;});
+  var cliTx=_cliObj?_cliObj.n:'';
+  var proTx=_proObj?_proObj.n:'';
   var ausMot=document.getElementById('ausMotivo')?document.getElementById('ausMotivo').value.trim():'';
   var puVal=document.getElementById('ePU')?document.getElementById('ePU').value.trim():'';
   var pqVal=document.getElementById('ePQ')?parseInt(document.getElementById('ePQ').value)||0:0;
   var w=null; for(var i=0;i<W.length;i++){if(String(W[i].id)===String(curW)){w=W[i];break;}}
   var tipo=null; for(var i=0;i<TT.length;i++){if(TT[i].id===curT){tipo=TT[i];break;}}
   if(!w||!tipo){tst('Error interno','er');return;}
- 
+
   /* AUSENCIA */
   if(curT==='ausencia'){
     if(!ausMot){tst('Indica el motivo de la ausencia','er');return;}
@@ -1101,19 +1110,19 @@ function saveE(){
     tst('Ausencia registrada','ok');
     shV('jor'); uSB(); return;
   }
- 
+
   var horas=parseFloat(document.getElementById('eH').value);
   if(!horas||horas<=0){tst('Indica las horas','er');return;}
   var desc=(document.getElementById('eD').value.trim()).toLowerCase();
   if(!desc){tst('Añade descripción','er');return;}
- 
+
   /* Si el usuario ya eligió manualmente Horas Extra, saltar análisis automático */
   if(curT==='horas_x'){
     if(!proTx&&!cliTx){tst('Las Horas Extra deben vincularse a proyecto o cliente','er');return;}
     _commitEntrada(w,tipo,td,inicio,fin,horas,desc,mat,maq,obs,cliTx,proTx,puVal,pqVal,true);
     return;
   }
- 
+
   /* ANÁLISIS HX AUTOMÁTICO */
   if(!inicio||!fin){
     _commitEntrada(w,tipo,td,inicio,fin,horas,desc,mat,maq,obs,cliTx,proTx,puVal,pqVal,false);
@@ -1167,13 +1176,7 @@ function saveE(){
     shV('jor'); uSB();
   });
 }
-function _autoAddCliPro(cliTx,proTx){
-  if(cliTx&&!CL.find(function(c){return c.n.toLowerCase()===cliTx.toLowerCase();})){CL.push({id:'c'+Date.now(),n:cliTx});svC();rClDL();}
-  if(proTx&&!PR.find(function(p){return p.n.toLowerCase()===proTx.toLowerCase();})){
-    var cid2='';var cli2=CL.find(function(c){return c.n.toLowerCase()===cliTx.toLowerCase();});if(cli2)cid2=cli2.id;
-    PR.push({id:'p'+Date.now(),n:proTx,cid:cid2});svR();rPrDL();
-  }
-}
+/* _autoAddCliPro eliminado v5 — cliente/proyecto solo desde Sheets */
 function _commitEntrada(w,tipo,td,inicio,fin,horas,desc,mat,maq,obs,cliTx,proTx,puVal,pqVal,esHX){
   _autoAddCliPro(cliTx,proTx);
   var entry={id:Date.now(),fe:td,ho:horas,hi:inicio,hf:fin,
@@ -1208,15 +1211,7 @@ function sndGS(p){
     }})
   }).then(function(){p.sy=true;svP();uSB();}).catch(function(){p.sy=false;svP();uSB();});
 }
- 
-/* gsPost — envío genérico POST al Apps Script */
-function gsPost(action, data){
-  var url=ST.gsUrl||GS_URL; if(!url) return;
-  fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:action,data:data})
-  }).catch(function(){});
-}
- 
+
 function tGS(){
   var url=ST.gsUrl||GS_URL; if(!url){tst('Sin URL','er');return;}
   tst('Probando...','inf');
@@ -1225,7 +1220,7 @@ function tGS(){
     .then(function(d){tst(d.status==='ok'?'Conexión OK ✓':'Error: '+(d.msg||'sin status'), d.status==='ok'?'ok':'er');})
     .catch(function(){tst('Sin respuesta — comprueba la URL','er');});
 }
- 
+
 /* ============================================================
    SYNC CONFIG DESDE SHEETS
    Descarga: trabajadores, tipos, clientes, proyectos, plantillas.
@@ -1244,24 +1239,14 @@ function syncConfig(manual){
       /* Trabajadores */
       if(d.trabajadores&&d.trabajadores.length){
         var wNew=d.trabajadores.map(function(t){
-          var rolRaw=(t.rol||'').toLowerCase().trim();
           return{id:parseInt(t.id)||t.id,n:t.nombre,ini:t.iniciales,
             c:t.color||'#888',pin:String(t.pin),
-            admin:rolRaw==='admin',
-            jefe:rolRaw==='jefe'||rolRaw.indexOf('jefe')>=0};
+            admin:t.rol==='admin',jefe:t.rol==='jefe'};
         });
-        /* Fusionar: W_DEF es autoritativo para admin/jefe/pin/color */
+        /* Fusionar: mantener W_DEF hardcoded + añadir los de Sheets */
         W_DEF.forEach(function(wd){
           var enSheets=wNew.find(function(x){return String(x.id)===String(wd.id);});
-          if(!enSheets){
-            wNew.push(JSON.parse(JSON.stringify(wd)));
-          } else {
-            /* Preservar campos críticos del W_DEF hardcoded */
-            enSheets.admin=wd.admin;
-            enSheets.jefe=wd.jefe||false;
-            enSheets.pin=wd.pin;
-            if(wd.c) enSheets.c=wd.c;
-          }
+          if(!enSheets) wNew.push(JSON.parse(JSON.stringify(wd)));
         });
         /* Sergio siempre admin y al final */
         W=wNew.sort(function(a,b){
@@ -1294,23 +1279,11 @@ function syncConfig(manual){
       /* Plantillas — CLAVE: esto es lo que faltaba */
       if(d.plantillas&&d.plantillas.length){
         var pre={desc:[],mat:[],maq:[],obs:[]};
-        var festivos=[];
         d.plantillas.forEach(function(pl){
-          var c=pl.campo; var t=(pl.texto||'').trim();
-          if(c==='fest'){
-            /* Festivo: texto es YYYY-MM-DD */
-            if(t&&/^\d{4}-\d{2}-\d{2}$/.test(t)&&festivos.indexOf(t)<0) festivos.push(t);
-          } else {
-            var tl=t.toLowerCase();
-            if(pre[c]&&tl&&pre[c].indexOf(tl)<0) pre[c].push(tl);
-          }
+          var c=pl.campo; var t=(pl.texto||'').toLowerCase().trim();
+          if(pre[c]&&t&&pre[c].indexOf(t)<0) pre[c].push(t);
         });
         PRE=pre; svPre(); rSug(); cambios.push('plantillas');
-        /* Actualizar FEST con los festivos de Sheets */
-        if(festivos.length){
-          festivos.forEach(function(f){if(FEST.indexOf(f)<0)FEST.push(f);});
-          FEST=festivos; svFest(); rLFest(); cambios.push('festivos('+festivos.length+')');
-        }
       }
       if(manual){
         tst(cambios.length?'Config actualizada: '+cambios.join(', '):'Sin cambios','ok');
@@ -1360,7 +1333,9 @@ function loadFromSheets(){
   var url=ST.gsUrl||GS_URL;
   if(!url){setBanner('warn','Sin URL — usando datos locales');PD=P.slice();PD_src='local';rDash();return;}
   setBanner('load','Descargando desde Sheets...');
-  fetch(url+'?action=getPartes&from=2000-01-01&to=2099-12-31&_='+Date.now())
+  var d90=new Date(); d90.setDate(d90.getDate()-90);
+  var from=d90.toISOString().split('T')[0], to=tod();
+  fetch(url+'?action=getPartes&from='+from+'&to='+to+'&_='+Date.now())
     .then(function(r){
       if(!r.ok) throw new Error('HTTP '+r.status);
       return r.json();
@@ -1387,10 +1362,11 @@ function loadFromSheets(){
         });
         PD_src='sheets';
         setBanner('ok','Google Sheets — '+PD.length+' registros (últimos 90 días)');
-        /* Sin filtro de fecha por defecto — mostrar todo */
-        document.getElementById('dD1').value='';
-        document.getElementById('dD2').value='';
-        rDash(); rCtrlSem();
+        /* Ajustar filtros de fecha al último mes */
+        var d30=new Date(); d30.setDate(d30.getDate()-30);
+        document.getElementById('dD1').value=d30.toISOString().split('T')[0];
+        document.getElementById('dD2').value=tod();
+        rDash();
       } else if(res.status==='ok' && !res.partes) {
         /* Apps Script viejo (solo tiene sync, no getPartes) */
         throw new Error('El script no tiene acción getPartes — redesplegar v3');
@@ -1400,123 +1376,10 @@ function loadFromSheets(){
     })
     .catch(function(err){
       console.warn('[Dashboard]',err.message);
-      PD=P.slice(); PD_src='local'; rCtrlSem();
+      PD=P.slice(); PD_src='local';
       setBanner('warn','Sin datos de Sheets ('+err.message+') — mostrando '+PD.length+' partes locales');
       rDash();
     });
-}
- 
-/* ============================================================
-   CONTROL DE MARCAJE SEMANAL
-============================================================ */
-function semCtrl(dir){
-  semOffset+=dir;
-  /* No permitir ir al futuro */
-  if(semOffset>0) semOffset=0;
-  document.getElementById('semNext').disabled=(semOffset>=0);
-  rCtrlSem();
-}
-function getLunes(offset){
-  /* Devuelve el lunes de la semana actual + offset semanas
-     FIX: usar fecha local para evitar desfase UTC en España (UTC+2) */
-  var ahora=new Date();
-  /* Construir fecha local sin conversión UTC */
-  var hoy=new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
-  var dow=hoy.getDay(); /* 0=dom, 1=lun... */
-  var diffLunes=dow===0?-6:1-dow;
-  var lunes=new Date(hoy); lunes.setDate(hoy.getDate()+diffLunes+(offset*7));
-  return lunes;
-}
-function rCtrlSem(){
-  var DIAS_L=['Lun','Mar','Mié','Jue','Vie'];
-  var MNOM=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-  var lunes=getLunes(semOffset);
-  /* Generar los 5 días laborables (L-V) */
-  var dias=[];
-  for(var i=0;i<5;i++){
-    var d=new Date(lunes); d.setDate(lunes.getDate()+i);
-    /* FIX: usar fecha local para evitar desfase UTC+2 */
-    var iso=d.getFullYear()+'-'+(d.getMonth()<9?'0':'')+(d.getMonth()+1)+'-'+(d.getDate()<10?'0':'')+d.getDate();
-    dias.push({iso:iso, label:DIAS_L[i]+' '+d.getDate()});
-  }
-  /* Label de semana */
-  var fin=dias[4];
-  var lbl='Sem '+(semOffset===0?'actual':semOffset===-1?'anterior':semOffset+'')
-    +' · '+lunes.getDate()+' '+MNOM[lunes.getMonth()]+' — '+new Date(fin.iso+'T12:00').getDate()+' '+MNOM[new Date(fin.iso+'T12:00').getMonth()];
-  document.getElementById('semLabel').textContent=lbl;
-  /* Trabajadores activos excepto Sergio (id 9) */
-  var wks=W.filter(function(w){return String(w.id)!=='9';})
-           .sort(function(a,b){return a.n>b.n?1:-1;});
-  /* Datos disponibles en PD (ya cargados de Sheets) */
-  var src=PD.length?PD:P;
-  /* Construir set de presencia: wid+fecha */
-  var presente={};
-  src.forEach(function(p){
-    if(p.fe) presente[String(p.wid)+'_'+p.fe]=true;
-  });
-  /* Calcular días festivos de la semana */
-  var festSem={};
-  dias.forEach(function(d){if(FEST.indexOf(d.iso)>=0)festSem[d.iso]=true;});
-  /* Hoy para no marcar días futuros */
-  var hoyIso=tod();
-  /* Construir tabla */
-  var faltas=0;
-  var h='<table style="width:100%;border-collapse:collapse;font-size:10px">';
-  /* Cabecera */
-  h+='<thead><tr>';
-  h+='<th style="text-align:left;padding:5px 4px;font-size:9px;color:var(--muted);font-weight:700;min-width:70px">Trabajador</th>';
-  dias.forEach(function(d){
-    var esFest=festSem[d.iso];
-    var esFuturo=d.iso>hoyIso;
-    var col=esFest?'var(--muted)':esFuturo?'var(--bdr)':'var(--fg)';
-    h+='<th style="text-align:center;padding:5px 2px;font-size:9px;color:'+col+';font-weight:700;white-space:nowrap">'
-      +d.label+(esFest?' <i class="fas fa-umbrella-beach" style="font-size:7px"></i>':'')
-      +'</th>';
-  });
-  h+='</tr></thead><tbody>';
-  /* Filas por trabajador */
-  wks.forEach(function(w){
-    h+='<tr style="border-bottom:1px solid var(--bdr)">';
-    /* Nombre con avatar */
-    h+='<td style="padding:5px 4px">'
-      +'<div style="display:flex;align-items:center;gap:5px">'
-      +'<div style="width:20px;height:20px;border-radius:50%;background:'+w.c+';display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#fff;flex-shrink:0">'+w.ini+'</div>'
-      +'<span style="font-weight:600;color:var(--fg)">'+esc(w.n)+'</span>'
-      +'</div></td>';
-    dias.forEach(function(d){
-      var esFest=festSem[d.iso];
-      var esFuturo=d.iso>hoyIso;
-      var key=String(w.id)+'_'+d.iso;
-      if(esFest){
-        /* Festivo — celda gris */
-        h+='<td style="text-align:center;padding:5px 2px;background:var(--card2)">'
-          +'<span style="font-size:10px;color:var(--bdr)">—</span></td>';
-      } else if(esFuturo){
-        /* Día futuro — celda vacía */
-        h+='<td style="text-align:center;padding:5px 2px"></td>';
-      } else if(presente[key]){
-        /* Tiene parte ✅ */
-        h+='<td style="text-align:center;padding:5px 2px">'
-          +'<span style="font-size:13px;color:var(--ok)">✓</span></td>';
-      } else {
-        /* Falta ❌ */
-        faltas++;
-        h+='<td style="text-align:center;padding:5px 2px;background:#FEF2F2">'
-          +'<span style="font-size:11px;color:var(--err);font-weight:700">✗</span></td>';
-      }
-    });
-    h+='</tr>';
-  });
-  h+='</tbody></table>';
-  /* Resumen debajo */
-  if(faltas>0){
-    h+='<div style="margin-top:8px;padding:6px 10px;background:#FEF2F2;border-radius:8px;font-size:10px;color:var(--err);font-weight:700">'
-      +'<i class="fas fa-exclamation-circle"></i> '+faltas+' parte(s) sin registrar esta semana</div>';
-  } else {
-    h+='<div style="margin-top:8px;padding:6px 10px;background:#F0FDF4;border-radius:8px;font-size:10px;color:var(--ok);font-weight:700">'
-      +'<i class="fas fa-check-circle"></i> Todos los partes registrados ✓</div>';
-  }
-  document.getElementById('tblCtrl').innerHTML=h;
 }
  
 /* ============================================================
@@ -1692,86 +1555,55 @@ function setHBanner(state,msg){
 }
 function rHist(){
   if(!curW){
+    /* Sin trabajador logueado: mostrar mensaje */
     document.getElementById('lHist').innerHTML='<div class="empty"><i class="fas fa-user"></i><p>Entra con tu nombre para ver tu historial</p></div>';
     document.getElementById('sHist').innerHTML='';
     return;
   }
-  var url=ST.gsUrl||GS_URL;
-  var MNOM=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   var mes=document.getElementById('hMes')?document.getElementById('hMes').value:'';
- 
-  if(!url){
-    /* Sin URL configurada: caer a localStorage */
-    _rHistLocal(mes);
-    return;
-  }
- 
-  /* Cargar TODOS los partes del trabajador desde Sheets (sin filtro de fecha) */
+  if(!mes){document.getElementById('lHist').innerHTML='<div class="empty"><i class="fas fa-calendar"></i><p>Selecciona un mes</p></div>';return;}
+  var url=ST.gsUrl||GS_URL;
+  if(!url){renderHistLocal(mes);return;}
+  /* Calcular from/to del mes seleccionado */
+  var yr=parseInt(mes.split('-')[0]),mo=parseInt(mes.split('-')[1]);
+  var from=mes+'-01';
+  var lastDay=new Date(yr,mo,0).getDate();
+  var to=mes+'-'+(lastDay<10?'0':'')+lastDay;
   setHBanner('load','Cargando desde Sheets...');
-  fetch(url+'?action=getPartes&from=2000-01-01&to=2099-12-31&_='+Date.now())
+  fetch(url+'?action=getPartes&from='+from+'&to='+to+'&_='+Date.now())
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(function(res){
       if(res.status==='ok'&&Array.isArray(res.partes)){
-        /* Normalizar y filtrar por este trabajador */
+        /* Normalizar y filtrar por worker_id */
         var todos=res.partes.map(function(p){return{
           fe:sanitizeFecha(p.fecha||p.fe||''),ho:parseFloat(p.horas||p.ho)||0,
           hi:sanitizeHora(p.inicio||p.hi||''),hf:sanitizeHora(p.fin||p.hf||''),
           wid:String(p.worker_id||p.wid||''),wn:p.nombre||p.wn||'',
           cn:p.cliente||p.cn||'',pn:p.proyecto||p.pn||'',
-          tt:p.tipo||p.tt||'',ds:p.descripcion||p.ds||'',
-          mt:p.material||p.mt||'',ma:p.maquinaria||p.ma||'',
-          ob:p.obs||p.ob||'',aus_motivo:p.aus_motivo||'',
-          hx:p.horas_extra==='SI'||p.hx||false,
+          tt:p.tipo||p.tt||'',ti:p.tipo_id||p.ti||'',
+          ds:p.descripcion||p.ds||'',mt:p.material||p.mt||'',
+          ma:p.maquinaria||p.ma||'',ob:p.obs||p.ob||'',
+          aus_motivo:p.aus_motivo||'',hx:p.horas_extra==='SI'||p.hx||false,
           pu:p.prod_unidad||p.pu||'',pq:parseInt(p.prod_cantidad||p.pq)||0
-        };}).filter(function(p){return p.fe;});
+        };});
         var mine=todos.filter(function(p){return String(p.wid)===String(curW);});
- 
-        /* Construir selector con TODOS los meses que tiene este trabajador */
-        var meses={};
-        mine.forEach(function(p){if(p.fe.length>=7)meses[p.fe.substring(0,7)]=true;});
-        var arr=Object.keys(meses).sort(function(a,b){return b.localeCompare(a);});
-        var sel=document.getElementById('hMes');
-        if(sel&&arr.length){
-          /* Preseleccionar: el mes que ya tenía elegido, o el más reciente */
-          var selVal=mes&&meses[mes]?mes:arr[0];
-          sel.innerHTML='<option value="">Selecciona un mes...</option>'+arr.map(function(m){
-            var pts=m.split('-');
-            var lbl=MNOM[parseInt(pts[1])-1]+' '+pts[0];
-            return'<option value="'+m+'"'+(m===selVal?' selected':'')+'>'+lbl+'</option>';
-          }).join('');
-          mes=selVal;
-        }
- 
-        /* Filtrar por mes seleccionado y renderizar */
-        var filtrado=mes?mine.filter(function(p){return p.fe.substring(0,7)===mes;}):mine;
-        setHBanner('ok','Sheets · '+mine.length+' registros totales');
-        renderHistData(filtrado,mes);
-      } else throw new Error(res.msg||'sin datos');
+        /* Poblar selector de meses con todos los meses presentes en Sheets */
+        buildMesSel(todos);
+        document.getElementById('hMes').value=mes;
+        setHBanner('ok','Google Sheets · '+mine.length+' registros');
+        renderHistData(mine,mes);
+      } else throw new Error(res.msg||'sin partes');
     })
     .catch(function(err){
-      setHBanner('er','Sin conexión — datos locales');
-      _rHistLocal(mes);
+      setHBanner('er','Sin conexión — mostrando datos locales');
+      renderHistLocal(mes);
     });
 }
-function _rHistLocal(mes){
-  /* Fallback: usar localStorage cuando no hay conexión a Sheets */
-  var MNOM=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  var mine=P.filter(function(p){return String(p.wid)===String(curW);});
-  var meses={};
-  mine.forEach(function(p){if(p.fe&&p.fe.length>=7)meses[p.fe.substring(0,7)]=true;});
-  var arr=Object.keys(meses).sort(function(a,b){return b.localeCompare(a);});
-  var sel=document.getElementById('hMes');
-  if(sel&&arr.length){
-    var selVal=mes&&meses[mes]?mes:arr[0];
-    sel.innerHTML='<option value="">Selecciona un mes...</option>'+arr.map(function(m){
-      var pts=m.split('-');
-      var lbl=MNOM[parseInt(pts[1])-1]+' '+pts[0];
-      return'<option value="'+m+'"'+(m===selVal?' selected':'')+'>'+lbl+'</option>';
-    }).join('');
-    mes=selVal;
-  }
-  var filtrado=mes?mine.filter(function(p){return p.fe.substring(0,7)===mes;}):mine;
-  renderHistData(filtrado,mes);
+function renderHistLocal(mes){
+  var mine=P.filter(function(p){return String(p.wid)===String(curW)&&(p.fe||'').substring(0,7)===mes;});
+  buildMesSel(P.filter(function(p){return String(p.wid)===String(curW);}));
+  document.getElementById('hMes').value=mes;
+  renderHistData(mine,mes);
 }
 function renderHistData(pp,mes){
   pp.sort(function(a,b){return b.fe.localeCompare(a.fe)||0;});
@@ -1894,8 +1726,8 @@ function addCl(){var v=document.getElementById('nCl').value.trim();if(!v)return;
 function delCl(id){CL=CL.filter(function(c){return c.id!==id;});PR=PR.filter(function(p){return p.cid!==id;});svC();svR();rLCl();rLPr();rClDL();}
 /* Proyectos */
 function rLPr(){document.getElementById('lPr').innerHTML=PR.map(function(p){var cl=CL.find(function(c){return c.id===p.cid;});return'<div class="aim"><span class="n"><i class="fas fa-folder" style="color:var(--acc2);margin-right:4px;font-size:9px"></i>'+esc(p.n)+' <span style="color:var(--muted);font-size:8px">('+(cl?esc(cl.n):'sin cliente')+')</span></span><button type="button" onclick="delPr(\''+p.id+'\')"><i class="fas fa-times"></i></button></div>';}).join('')||'<span style="font-size:9px;color:var(--muted)">Sin proyectos</span>';}
-function rPSel(){document.getElementById('pClS').innerHTML='<option value="">Cliente...</option>'+CL.map(function(c){return'<option value="'+c.id+'">'+esc(c.n)+'</option>';}).join('');}
-function addPr(){var cid=document.getElementById('pClS').value,n=document.getElementById('nPr').value.trim();if(!n||!cid){tst('Selecciona cliente y nombre','er');return;}PR.push({id:'p'+Date.now(),n:n,cid:cid});svR();document.getElementById('nPr').value='';rLPr();rPrDL();tst('Proyecto añadido','ok');}
+function rPSel(){} /* pClS eliminado v5 */
+function addPr(){var n=document.getElementById('nPr').value.trim();if(!n){tst('Escribe el nombre del proyecto','er');return;}PR.push({id:'p'+Date.now(),n:n,cid:''});svR();document.getElementById('nPr').value='';rLPr();rPrDL();tst('Proyecto añadido','ok');}
 function delPr(id){PR=PR.filter(function(p){return p.id!==id;});svR();rLPr();rPrDL();}
 /* Plantillas */
 function rLPre(){var fl={desc:'Descripción',mat:'Material',maq:'Maquinaria',obs:'Observaciones'};var h='';for(var k in fl){if(!fl.hasOwnProperty(k))continue;var it=PRE[k]||[];if(!it.length)continue;h+='<div style="margin-bottom:4px"><span style="font-size:9px;font-weight:700;color:var(--muted)">'+fl[k]+':</span>';it.forEach(function(t,i){h+='<div class="aim" style="margin-top:2px"><span class="n" style="font-size:10px">'+esc(t)+'</span><button type="button" onclick="delPre(\''+k+'\','+i+')"><i class="fas fa-times"></i></button></div>';});h+='</div>';}document.getElementById('lPre').innerHTML=h||'<span style="font-size:9px;color:var(--muted)">Sin plantillas</span>';}
@@ -1914,7 +1746,7 @@ function addPre(){
 function delPre(c,i){PRE[c].splice(i,1);svPre();rLPre();rSug();}
 function chPi(){var v=document.getElementById('nPi').value.trim();if(v.length<4){tst('Mínimo 4 caracteres','er');return;}ST.pin=v;svS();document.getElementById('nPi').value='';tst('PIN cambiado','ok');}
 function clrAll(){if(!P.length){tst('No hay datos locales','inf');return;}P=[];svP();rHoy();uSB();tst('Partes locales borrados','inf');}
- 
+
 /* ============================================================
    FESTIVOS
 ============================================================ */
@@ -1935,21 +1767,12 @@ function addFest(){
   var v=document.getElementById('nFest').value;
   if(!v){tst('Selecciona una fecha','er');return;}
   if(FEST.indexOf(v)>=0){tst('Ya está en la lista','inf');return;}
-  FEST.push(v);svFest();document.getElementById('nFest').value='';rLFest();
-  /* Sincronizar a Sheets — plantillas campo=fest */
-  gsPost('addPlantilla',{id:'fest_'+v,campo:'fest',texto:v,activo:true});
-  tst('Festivo añadido','ok');
+  FEST.push(v);svFest();document.getElementById('nFest').value='';rLFest();tst('Festivo añadido','ok');
 }
 function delFest(f){FEST=FEST.filter(function(x){return x!==f;});svFest();rLFest();}
 function addFestBulk(arr){
-  var nuevos=[];
-  arr.forEach(function(f){if(FEST.indexOf(f)<0){FEST.push(f);nuevos.push(f);}});
-  svFest();rLFest();
-  /* Sincronizar a Sheets los que no estaban */
-  nuevos.forEach(function(f){
-    gsPost('addPlantilla',{id:'fest_'+f,campo:'fest',texto:f,activo:true});
-  });
-  tst(arr.length+' festivos cargados','ok');
+  arr.forEach(function(f){if(FEST.indexOf(f)<0)FEST.push(f);});
+  svFest();rLFest();tst(arr.length+' festivos cargados','ok');
 }
 function addFestivos2025(){
   addFestBulk([
@@ -1985,9 +1808,9 @@ function ldQR(){var url=location.href;var img=document.getElementById('qrI');if(
 try{
   var td=tod();
   document.getElementById('fF').value=td;
-  /* Sin filtro de fecha por defecto */
-  document.getElementById('dD1').value='';
-  document.getElementById('dD2').value='';
+  var d30=new Date(); d30.setDate(d30.getDate()-30);
+  document.getElementById('dD1').value=d30.toISOString().split('T')[0];
+  document.getElementById('dD2').value=td;
   document.getElementById('aPi').onkeydown=function(e){if(e.key==='Enter')chkAdm();};
   /* Garantía final: si W sigue vacío o null por cualquier motivo, restaurar DEF */
   if(!W||!Array.isArray(W)||W.length===0){
@@ -1998,6 +1821,15 @@ try{
     var ok=false;for(var i=0;i<W.length;i++){if(String(W[i].id)===String(wd.id)){ok=true;break;}}
     if(!ok)W.push(JSON.parse(JSON.stringify(wd)));
   });
+  poblarMesSel();
+  /* v5: purga TOTAL de claves de cliente/proyecto — Sheets es la única fuente */
+  try{
+    var _purge=['pt_c','pt_py','pt_cl','pt_pr','pt_clientes','pt_proyectos','clientes','proyectos'];
+    _purge.forEach(function(k){localStorage.removeItem(k);});
+    /* Además limpiar pt_p de campos cn/pn para que gSug no sugiera basura */
+    var _pp=localStorage.getItem('pt_p');
+    if(_pp){try{var _pa=JSON.parse(_pp);_pa.forEach(function(e){e.cn='';e.pn='';});localStorage.setItem('pt_p',JSON.stringify(_pa));}catch(e){}}
+  }catch(e){}
   rWG(); rTC(); rClDL(); rPrDL(); rSug(); rHoy(); uSB(); ldQR();
   /* Sync config en background — silencioso, sin bloquear UI */
   setTimeout(function(){syncConfig(false);}, 1200);

@@ -217,7 +217,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
 <header class="hdr">
  <button class="bk" id="bkBtn" onclick="goBack()"><i class="fas fa-arrow-left"></i></button>
  <div class="logo"><i class="fas fa-fire"></i></div>
- <div><h1>Taller Metálico</h1><span>Partes diarios <span style="color:#DC2626;font-weight:700">v5.1 · 09/06/2026 12:40</span></span></div>
+ <div><h1>Taller Metálico</h1><span>Partes diarios <span style="color:#DC2626;font-weight:700">v5.3 · 11/06/2026</span></span></div>
  <div class="sb loc" id="sb"><i class="fas fa-hdd"></i> Local</div>
 </header>
  
@@ -253,6 +253,11 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
     <button class="bt bt2 bts" onclick="shV('sel')" style="width:auto;margin-left:auto"><i class="fas fa-sign-out-alt"></i></button>
    </div>
    <div class="dbanner load" id="dbanner"><i class="fas fa-spinner fa-spin"></i> Cargando desde Sheets...</div>
+   <div id="dupSec" style="display:none">
+    <div class="sec"><i class="fas fa-clone" style="color:var(--err)"></i> Posibles duplicados <span id="dupN" style="background:var(--err);color:#fff;border-radius:10px;padding:1px 8px;font-size:10px;margin-left:4px">0</span></div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:6px">Mismo trabajador + misma descripción enviados con minutos de diferencia, o misma franja del mismo día. <b>Aceptar</b> los marca como revisados (no vuelven a salir). Los cambios se escriben en Sheets.</div>
+    <div id="dupList"></div>
+   </div>
    <div class="sec"><i class="fas fa-filter"></i> Filtros</div>
    <div class="card">
     <div class="fil-row"><input type="date" id="dD1"><input type="date" id="dD2"></div>
@@ -288,6 +293,16 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
     </div>
     <div id="tblCtrl" style="overflow-x:auto"></div>
    </div>
+   <div class="sec"><i class="fas fa-file-invoice-dollar"></i> Facturación mensual</div>
+   <div class="card">
+    <div style="font-size:9px;color:var(--muted);margin-bottom:8px">CSV con horas y actividades de un mes completo, para adjuntar a la factura mensual (p. ej. Strongforms → Alumed). Lee directamente de Google Sheets.</div>
+    <div class="r2">
+     <div class="fld"><label>Mes</label><select id="facMes"></select></div>
+     <div class="fld"><label>Cliente</label><select id="facCli"><option value="">Todos los clientes</option></select></div>
+    </div>
+    <button class="bt bt1 bts" onclick="dlFacCSV()" style="width:100%"><i class="fas fa-file-csv"></i> Generar CSV de facturación</button>
+    <div id="facInfo" style="font-size:9px;color:var(--muted);margin-top:6px"></div>
+   </div>
    <div class="sec"><i class="fas fa-download"></i> Exportar</div>
    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
     <button class="bt bt2 bts" onclick="dlCSV()" style="flex:1"><i class="fas fa-file-csv"></i> CSV</button>
@@ -298,12 +313,19 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
   </div>
  
   <div id="vFrm" style="display:none">
+   <div class="sec"><i class="fas fa-calendar-day"></i> Fecha del parte</div>
+   <div class="card">
+    <div class="fld" style="margin-bottom:0"><label>Día (hoy por defecto — puedes elegir un día pasado)</label>
+     <input type="date" id="eFe" onchange="onFeChange()">
+    </div>
+    <div id="eFeWarn" style="display:none;margin-top:8px;padding:8px;background:#FFF7ED;border-radius:8px;font-size:10px;color:var(--acc);font-weight:700"><i class="fas fa-exclamation-triangle"></i> <span id="eFeWarnTx"></span></div>
+   </div>
    <div class="sec"><i class="fas fa-wrench"></i> Tipo de trabajo</div>
    <div class="tcg" id="tcG"></div>
    <div class="sec"><i class="fas fa-building"></i> Cliente / Proyecto</div>
    <div class="card"><div class="r2">
-    <div class="fld"><label>Cliente</label><input type="text" id="selC" list="dlCl" placeholder="Escribe o elige..."><datalist id="dlCl"></datalist></div>
-    <div class="fld"><label>Proyecto</label><input type="text" id="selP" list="dlPr" placeholder="Escribe o elige..."><datalist id="dlPr"></datalist></div>
+    <div class="fld"><label>Cliente</label><select id="selC" onchange="onSelCli()"><option value="">-- Elige cliente --</option></select></div>
+    <div class="fld"><label>Proyecto</label><select id="selP"><option value="">-- Elige proyecto --</option></select></div>
    </div></div>
    <!-- Card especial: AUSENCIA -->
    <div id="ausCard" style="display:none">
@@ -528,7 +550,15 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
 /* ============================================================
    CONSTANTES
 ============================================================ */
-var GS_URL = 'https://script.google.com/macros/s/AKfycbwS1Ii9aJOmDsqpQybwA2XwkW7ifm8tx7MSDpBzzc_bkWlbAlauPgx_ZDcjdRJeE2ke/exec';
+var GS_URL = 'https://script.google.com/macros/s/AKfycbz8GF7XtR_bWvCm85pl_gHnseTCTBAKDaXwCaM9PBVvnDZ7zuIfFp2H71QFAidXF0KE/exec';
+/* v5.3: implementaciones ANTIGUAS conocidas — si un móvil tiene una de estas
+   en localStorage, se migra automáticamente a GS_URL. Sin esto, cada dispositivo
+   se queda clavado para siempre en la URL que guardó el primer día
+   (causa probable del error de sync de Abdoulie). */
+var GS_URL_OLD = [
+  'https://script.google.com/macros/s/AKfycbwS1Ii9aJOmDsqpQybwA2XwkW7ifm8tx7MSDpBzzc_bkWlbAlauPgx_ZDcjdRJeE2ke/exec',
+  'https://script.google.com/macros/s/AKfycbzWrlmGi5VQFXB3ZxdsP0ma39JeBm7D0EstfEgiDOjGX9SmGwnx_m8lOMG_8NTJAOc/exec'
+];
 var DEFAULT_EMAIL = '';
 var COLS = ['#E8740C','#059669','#7C3AED','#0891B2','#D97706','#BE185D','#4F46E5','#DC2626','#15803D','#B45309','#0D9488','#9333EA'];
 var ICO  = ['fa-fire','fa-cut','fa-cogs','fa-tools','fa-paint-roller','fa-hammer','fa-truck','fa-warehouse','fa-map-marker-alt','fa-industry','fa-wrench','fa-broom','fa-ellipsis-h','fa-dolly'];
@@ -541,8 +571,8 @@ var W_DEF = [
   {id:5,n:'Abdoulie',  ini:'AB',c:'#D97706',pin:'ulie', admin:false},
   {id:6,n:'Alieu',     ini:'AI',c:'#BE185D',pin:'lieu', admin:false},
   {id:7,n:'Ismael',    ini:'IS',c:'#4F46E5',pin:'mael', admin:false},
-  {id:9,n:'Fernando',  ini:'FE',c:'#0F766E',pin:'ando', admin:false, jefe:true},
-  {id:8,n:'Sergio',    ini:'SE',c:'#DC2626',pin:'7777', admin:true}
+  {id:8,n:'Fernando',  ini:'FE',c:'#0F766E',pin:'ando', admin:false, jefe:true},
+  {id:9,n:'Sergio',    ini:'SE',c:'#DC2626',pin:'7777', admin:true}
 ];
  
 /* ============================================================
@@ -555,8 +585,12 @@ var ST  = ld('pt_s', {pin:'7777', gsUrl:'', email:''});
 var PRE = ld('pt_pre', {desc:[],mat:[],maq:[],obs:[]});
 var W   = ld('pt_w', null);
 if(!W||!Array.isArray(W)||!W.length) W=JSON.parse(JSON.stringify(W_DEF));
-var CL  = ld('pt_c', []);
-var PR  = ld('pt_py', []);
+/* v5.2: CL/PR NUNCA se leen de localStorage — Google Sheets es la única fuente.
+   Se purgan las claves antiguas en cada arranque para eliminar "vicios" cacheados
+   (nombres mal escritos que el móvil recordaba). syncConfig() los repuebla al abrir. */
+try{localStorage.removeItem('pt_c');localStorage.removeItem('pt_py');}catch(e){}
+var CL  = [];
+var PR  = [];
 var TT  = ld('pt_tt', null);
 var FEST= ld('pt_fest', []); /* Array de strings 'YYYY-MM-DD' — festivos */
  
@@ -569,7 +603,27 @@ var FEST= ld('pt_fest', []); /* Array de strings 'YYYY-MM-DD' — festivos */
   });
   svW();
 })();
+/* v5.2 MIGRACIÓN: caches antiguos tenían Fernando=9 y Sergio=8 (invertido
+   respecto a Sheets). Corregir para que los partes lleven el worker_id correcto. */
+(function fixIdsSwap(){
+  var chg=false;
+  W.forEach(function(w){
+    if(w.n==='Fernando'&&String(w.id)==='9'){w.id=8;chg=true;}
+    else if(w.n==='Sergio'&&String(w.id)==='8'){w.id=9;chg=true;}
+  });
+  if(chg){
+    var seen={},out=[];
+    W.forEach(function(w){var k=String(w.id);if(!seen[k]){seen[k]=1;out.push(w);}});
+    W=out; svW();
+  }
+})();
 if(!ST.gsUrl) ST.gsUrl = GS_URL;
+/* v5.3: migración de URL — solo sustituye implementaciones antiguas CONOCIDAS;
+   una URL personalizada puesta a mano en Admin se respeta */
+if(GS_URL_OLD.indexOf(ST.gsUrl)>=0){
+  ST.gsUrl=GS_URL;
+  try{localStorage.setItem('pt_s',JSON.stringify(ST));}catch(e){}
+}
 if(!TT) TT = [
   {id:'sold_alu',l:'Soldadura aluminio',i:'fa-fire'},
   {id:'sold_ac', l:'Soldadura acero',   i:'fa-fire'},
@@ -601,6 +655,9 @@ var semOffset = 0; /* 0=semana actual, -1=anterior */
    UTILS
 ============================================================ */
 function tod(){return new Date().toISOString().split('T')[0];}
+/* v5.2: horas pueden venir de Sheets como texto con coma decimal ("7,5")
+   en filas editadas a mano — parseFloat("7,5") daría 7 y se perderían medias horas */
+function parseHoras(v){if(v==null||v==='')return 0;return parseFloat(String(v).replace(',','.'))||0;}
 /* Extrae YYYY-MM-DD de cualquier formato que venga de Sheets:
    - '2025-05-19'  → '2025-05-19'
    - '2025-05-19T06:00:00.000Z' → '2025-05-19'
@@ -661,8 +718,8 @@ function sanitizeHora(v){
 function fmtD(s){try{var d=new Date(s+'T12:00:00');return ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][d.getDay()]+' '+d.getDate()+' '+['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][d.getMonth()];}catch(e){return s;}}
 function esc(s){if(s==null)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function svP(){try{localStorage.setItem('pt_p',JSON.stringify(P));}catch(e){}}
-function svC(){try{localStorage.setItem('pt_c',JSON.stringify(CL));}catch(e){}}
-function svR(){try{localStorage.setItem('pt_py',JSON.stringify(PR));}catch(e){}}
+function svC(){try{localStorage.removeItem('pt_c');}catch(e){}}  /* v5.2: CL no se persiste — solo Sheets */
+function svR(){try{localStorage.removeItem('pt_py');}catch(e){}} /* v5.2: PR no se persiste — solo Sheets */
 function svT(){try{localStorage.setItem('pt_tt',JSON.stringify(TT));}catch(e){}}
 function svPre(){try{localStorage.setItem('pt_pre',JSON.stringify(PRE));}catch(e){}}
 function svFest(){try{localStorage.setItem('pt_fest',JSON.stringify(FEST));}catch(e){}}
@@ -732,7 +789,7 @@ function shV(v){
   /* Callbacks */
   if(v==='jor')  rJor();
   if(v==='frm')  {rTC();rSug();rClDL();rPrDL();}
-  if(v==='dash') loadFromSheets();
+  if(v==='dash') {loadFromSheets(); rFacSel();}
 }
  
 function goBack(){
@@ -871,6 +928,10 @@ function addEntry(){
   var horasCard=document.getElementById('horasCard'); if(horasCard) horasCard.style.display='block';
   var detCard=document.getElementById('detalleCard'); if(detCard) detCard.style.display='block';
   var td=tod();
+  /* v5.2: fecha del parte — por defecto hoy, máximo hoy (se permite el pasado) */
+  var fe=document.getElementById('eFe');
+  if(fe){fe.value=td; fe.max=td;}
+  var few=document.getElementById('eFeWarn'); if(few)few.style.display='none';
   var my=P.filter(function(p){return String(p.wid)===String(curW)&&p.fe===td;});
   if(my.length){
     var last=my.reduce(function(a,b){return a.id>b.id?a:b;});
@@ -933,8 +994,53 @@ function selT(id){
 /* ============================================================
    DATALISTS + SUGERENCIAS
 ============================================================ */
-function rClDL(){var dl=document.getElementById('dlCl');if(!dl)return;dl.innerHTML=CL.map(function(c){return'<option value="'+esc(c.n)+'">';}).join('');}
-function rPrDL(){var dl=document.getElementById('dlPr');if(!dl)return;dl.innerHTML=PR.map(function(p){return'<option value="'+esc(p.n)+'">';}).join('');}
+/* v5.2: selects puros — solo se puede elegir lo que existe en Sheets.
+   El teclado del móvil ya no interviene: cero "vicios" de autocompletado. */
+function rClDL(){
+  var s=document.getElementById('selC'); if(!s)return;
+  var cur=s.value;
+  s.innerHTML='<option value="">-- Elige cliente --</option>'+CL.map(function(c){return'<option value="'+esc(c.n)+'">'+esc(c.n)+'</option>';}).join('');
+  if(cur&&CL.find(function(c){return c.n===cur;})) s.value=cur; else s.value='';
+}
+function rPrDL(){
+  var s=document.getElementById('selP'); if(!s)return;
+  var selCEl=document.getElementById('selC');
+  var cliN=selCEl?selCEl.value:'';
+  var cli=CL.find(function(c){return c.n===cliN;});
+  /* Si hay cliente elegido: solo sus proyectos (+ los sin cliente asignado). Si no: todos. */
+  var lst=cli?PR.filter(function(p){return !p.cid||String(p.cid)===String(cli.id);}):PR;
+  var cur=s.value;
+  s.innerHTML='<option value="">-- Elige proyecto --</option>'+lst.map(function(p){return'<option value="'+esc(p.n)+'">'+esc(p.n)+'</option>';}).join('');
+  if(cur&&lst.find(function(p){return p.n===cur;})) s.value=cur; else s.value='';
+}
+function onSelCli(){rPrDL();}
+/* v5.2: cambio de fecha del parte — aviso visual + sugerir horas según ese día */
+function onFeChange(){
+  var fe=document.getElementById('eFe'); if(!fe)return;
+  var hoy=tod();
+  if(fe.value>hoy) fe.value=hoy; /* nunca futuro */
+  var v=fe.value;
+  var w=document.getElementById('eFeWarn'),tx=document.getElementById('eFeWarnTx');
+  if(v&&v!==hoy){
+    if(tx)tx.textContent='Registrando parte para el '+fmtD(v)+' (no es hoy)';
+    if(w)w.style.display='block';
+  } else if(w){w.style.display='none';}
+  /* Sugerir inicio/fin según la última entrada de ESE día */
+  if(curW&&curT!=='ausencia'){
+    var my=P.filter(function(p){return String(p.wid)===String(curW)&&p.fe===v;});
+    if(my.length){
+      var last=my.reduce(function(a,b){return a.id>b.id?a:b;});
+      if(last.hf&&last.hf!=='00:00'){
+        document.getElementById('eI').value=last.hf;
+        var ph=last.hf.split(':');var nf=Math.min(parseInt(ph[0])+8,22);
+        document.getElementById('eF').value=(nf<10?'0':'')+nf+':00';calcH();
+      }
+    } else if(curT!=='horas_x'){
+      document.getElementById('eI').value='06:00';
+      document.getElementById('eF').value='14:00';calcH();
+    }
+  }
+}
 function gSug(campo,lim){
   lim=lim||8;var fm={desc:'ds',mat:'mt',maq:'ma',obs:'ob'};var k=fm[campo]||campo;
   var freq={};
@@ -1059,7 +1165,11 @@ function showHXConfirm(info, cb){
 function saveE(){
   if(!curW){tst('Selecciona trabajador','er');return;}
   if(!curT){tst('Selecciona tipo de trabajo','er');return;}
-  var td=tod();
+  /* v5.2: la fecha viene del campo (permite días pasados) */
+  var feEl=document.getElementById('eFe');
+  var td=(feEl&&feEl.value)?feEl.value:tod();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(td)){tst('Fecha no válida','er');return;}
+  if(td>tod()){tst('No se pueden registrar partes en el futuro','er');return;}
   var inicio=document.getElementById('eI').value;
   var fin=document.getElementById('eF').value;
   var mat=(document.getElementById('eM').value.trim()).toLowerCase();
@@ -1084,7 +1194,7 @@ function saveE(){
       aus_motivo:ausMot,hx:false,pu:'',pq:0,
       ts:new Date().toISOString(),sy:false};
     P.push(entry); svP(); sndGS(entry);
-    tst('Ausencia registrada','ok');
+    tst('Ausencia registrada'+(td!==tod()?' ('+fmtD(td)+')':''),'ok');
     shV('jor'); uSB(); return;
   }
 
@@ -1169,7 +1279,7 @@ function _commitEntrada(w,tipo,td,inicio,fin,horas,desc,mat,maq,obs,cliTx,proTx,
     aus_motivo:'',hx:esHX,pu:puVal,pq:pqVal,
     ts:new Date().toISOString(),sy:false};
   P.push(entry); svP(); sndGS(entry);
-  tst(tipo.l+' · '+fmt2(horas)+'h guardadas','ok');
+  tst(tipo.l+' · '+fmt2(horas)+'h guardadas'+(td!==tod()?' ('+fmtD(td)+')':''),'ok');
   shV('jor'); uSB();
 }
  
@@ -1252,7 +1362,7 @@ function syncConfig(manual){
       /* Clientes */
       if(d.clientes){
         CL=d.clientes.map(function(c){return{id:c.id,n:c.nombre};});
-        svC(); rClDL(); cambios.push('clientes');
+        svC(); rClDL(); rFacSel(); cambios.push('clientes');
       }
       /* Proyectos */
       if(d.proyectos){
@@ -1329,7 +1439,7 @@ function loadFromSheets(){
           return {
             id       : p.id||p.timestamp||Math.random(),
             fe       : sanitizeFecha(p.fecha||p.fe||''),
-            ho       : parseFloat(p.horas||p.ho)||0,
+            ho       : parseHoras(p.horas!==undefined&&p.horas!==''?p.horas:p.ho),
             hi       : sanitizeHora(p.inicio||p.hi||''),
             hf       : sanitizeHora(p.fin||p.hf||''),
             wid      : p.worker_id||p.wid||0,
@@ -1340,7 +1450,9 @@ function loadFromSheets(){
             ds       : p.descripcion||p.ds||'',
             mt       : p.material||p.mt||'',
             ma       : p.maquinaria||p.maquina||p.ma||'',
-            ob       : p.obs||p.observaciones||p.ob||''
+            ob       : p.obs||p.observaciones||p.ob||'',
+            ts       : p.timestamp||'',
+            rv       : p.revision||''
           };
         });
         PD_src='sheets';
@@ -1349,7 +1461,7 @@ function loadFromSheets(){
         var d30=new Date(); d30.setDate(d30.getDate()-30);
         document.getElementById('dD1').value=d30.toISOString().split('T')[0];
         document.getElementById('dD2').value=tod();
-        rDash(); rCtrlSem();
+        rDash(); rCtrlSem(); rDups();
       } else if(res.status==='ok' && !res.partes) {
         /* Apps Script viejo (solo tiene sync, no getPartes) */
         throw new Error('El script no tiene acción getPartes — redesplegar v3');
@@ -1559,7 +1671,7 @@ function rHist(){
       if(res.status==='ok'&&Array.isArray(res.partes)){
         /* Normalizar y filtrar por worker_id */
         var todos=res.partes.map(function(p){return{
-          fe:sanitizeFecha(p.fecha||p.fe||''),ho:parseFloat(p.horas||p.ho)||0,
+          fe:sanitizeFecha(p.fecha||p.fe||''),ho:parseHoras(p.horas!==undefined&&p.horas!==''?p.horas:p.ho),
           hi:sanitizeHora(p.inicio||p.hi||''),hf:sanitizeHora(p.fin||p.hf||''),
           wid:String(p.worker_id||p.wid||''),wn:p.nombre||p.wn||'',
           cn:p.cliente||p.cn||'',pn:p.proyecto||p.pn||'',
@@ -1705,12 +1817,24 @@ function addTi(){var v=document.getElementById('nTi').value.trim();if(!v)return;
 function delTi(id){TT=TT.filter(function(t){return t.id!==id;});svT();rLTi();rTC();}
 /* Clientes */
 function rLCl(){document.getElementById('lCl').innerHTML=CL.map(function(c){return'<div class="aim"><span class="n"><i class="fas fa-building" style="color:var(--acc);margin-right:4px;font-size:9px"></i>'+esc(c.n)+'</span><button type="button" onclick="delCl(\''+c.id+'\')"><i class="fas fa-times"></i></button></div>';}).join('')||'<span style="font-size:9px;color:var(--muted)">Sin clientes</span>';}
-function addCl(){var v=document.getElementById('nCl').value.trim();if(!v)return;CL.push({id:'c'+Date.now(),n:v});svC();document.getElementById('nCl').value='';rLCl();rClDL();tst('Cliente añadido','ok');}
+function addCl(){var v=document.getElementById('nCl').value.trim();if(!v)return;
+  if(CL.find(function(c){return c.n.toLowerCase()===v.toLowerCase();})){tst('Ese cliente ya existe','er');return;}
+  var nc={id:'c'+Date.now(),n:v};CL.push(nc);svC();document.getElementById('nCl').value='';rLCl();rClDL();rPSel();
+  /* v5.2: persistir en Sheets (SSOT) — antes solo era local y desaparecía en el siguiente sync */
+  var url=ST.gsUrl||GS_URL;
+  if(url){fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'addCliente',data:{id:nc.id,nombre:nc.n,activo:true}})});}
+  tst('Cliente añadido y guardado en Sheets','ok');}
 function delCl(id){CL=CL.filter(function(c){return c.id!==id;});PR=PR.filter(function(p){return p.cid!==id;});svC();svR();rLCl();rLPr();rClDL();}
 /* Proyectos */
 function rLPr(){document.getElementById('lPr').innerHTML=PR.map(function(p){var cl=CL.find(function(c){return c.id===p.cid;});return'<div class="aim"><span class="n"><i class="fas fa-folder" style="color:var(--acc2);margin-right:4px;font-size:9px"></i>'+esc(p.n)+' <span style="color:var(--muted);font-size:8px">('+(cl?esc(cl.n):'sin cliente')+')</span></span><button type="button" onclick="delPr(\''+p.id+'\')"><i class="fas fa-times"></i></button></div>';}).join('')||'<span style="font-size:9px;color:var(--muted)">Sin proyectos</span>';}
 function rPSel(){document.getElementById('pClS').innerHTML='<option value="">Cliente...</option>'+CL.map(function(c){return'<option value="'+c.id+'">'+esc(c.n)+'</option>';}).join('');}
-function addPr(){var cid=document.getElementById('pClS').value,n=document.getElementById('nPr').value.trim();if(!n||!cid){tst('Selecciona cliente y nombre','er');return;}PR.push({id:'p'+Date.now(),n:n,cid:cid});svR();document.getElementById('nPr').value='';rLPr();rPrDL();tst('Proyecto añadido','ok');}
+function addPr(){var cid=document.getElementById('pClS').value,n=document.getElementById('nPr').value.trim();if(!n||!cid){tst('Selecciona cliente y nombre','er');return;}
+  if(PR.find(function(p){return p.n.toLowerCase()===n.toLowerCase();})){tst('Ese proyecto ya existe','er');return;}
+  var np={id:'p'+Date.now(),n:n,cid:cid};PR.push(np);svR();document.getElementById('nPr').value='';rLPr();rPrDL();
+  /* v5.2: persistir en Sheets (SSOT) */
+  var url=ST.gsUrl||GS_URL;
+  if(url){fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'addProyecto',data:{id:np.id,cliente_id:np.cid,nombre:np.n,activo:true}})});}
+  tst('Proyecto añadido y guardado en Sheets','ok');}
 function delPr(id){PR=PR.filter(function(p){return p.id!==id;});svR();rLPr();rPrDL();}
 /* Plantillas */
 function rLPre(){var fl={desc:'Descripción',mat:'Material',maq:'Maquinaria',obs:'Observaciones'};var h='';for(var k in fl){if(!fl.hasOwnProperty(k))continue;var it=PRE[k]||[];if(!it.length)continue;h+='<div style="margin-bottom:4px"><span style="font-size:9px;font-weight:700;color:var(--muted)">'+fl[k]+':</span>';it.forEach(function(t,i){h+='<div class="aim" style="margin-top:2px"><span class="n" style="font-size:10px">'+esc(t)+'</span><button type="button" onclick="delPre(\''+k+'\','+i+')"><i class="fas fa-times"></i></button></div>';});h+='</div>';}document.getElementById('lPre').innerHTML=h||'<span style="font-size:9px;color:var(--muted)">Sin plantillas</span>';}
@@ -1842,6 +1966,239 @@ function rCtrlSem(){
   document.getElementById('tblCtrl').innerHTML=h+res;
 }
 /* CSV / EMAIL */
+/* ============================================================
+   DUPLICADOS — DETECCIÓN Y TRIAJE (v5.3, solo Admin)
+   Reglas:
+   R1: mismo trabajador + misma descripción (normalizada) +
+       timestamps a menos de 30 min  → doble envío / copia manual
+   R2: mismo trabajador + mismo día + misma franja inicio-fin +
+       mismas horas + misma descripción → reenvío idéntico
+   Los grupos donde TODOS los partes tienen revision='ok' no se muestran.
+   Acciones (escriben en Sheets vía Apps Script v3.5):
+     Borrar  → deleteParte   |  Editar → updateParte  |  Aceptar → revision='ok'
+============================================================ */
+var DUPG=[]; /* grupos detectados: arrays de referencias a PD */
+function normTxt(s){
+  return String(s||'').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim().substring(0,60);
+}
+function tsMs(t){var d=new Date(t);return isNaN(d.getTime())?0:d.getTime();}
+function detectDups(){
+  DUPG=[];
+  if(PD_src!=='sheets'||!PD.length) return;
+  var n=PD.length, used={}, groups={};
+  /* construir claves */
+  for(var i=0;i<n;i++){
+    var p=PD[i];
+    p._nd=normTxt(p.ds); p._tm=tsMs(p.ts);
+  }
+  for(var i=0;i<n;i++){
+    for(var j=i+1;j<n;j++){
+      var a=PD[i],b=PD[j];
+      if(String(a.wid)!==String(b.wid)) continue;
+      var sameDesc=(a._nd&&a._nd.length>=6&&a._nd===b._nd);
+      var r1=sameDesc&&(a._tm&&b._tm&&Math.abs(a._tm-b._tm)<=30*60*1000);
+      var r2=sameDesc&&(a.fe===b.fe&&a.hi===b.hi&&a.hf===b.hf&&a.ho===b.ho);
+      /* R3: misma franja exacta del mismo día, enviados con <30 min de diferencia
+         → doble envío aunque corrigiera una errata en la descripción */
+      var r3=(a.fe===b.fe&&a.hi===b.hi&&a.hf===b.hf&&a.ho===b.ho&&a.ho>0
+              &&a._tm&&b._tm&&Math.abs(a._tm-b._tm)<=30*60*1000);
+      if(!r1&&!r2&&!r3) continue;
+      /* unir en grupo existente o crear nuevo */
+      var gi=used[a.id]!==undefined?used[a.id]:(used[b.id]!==undefined?used[b.id]:-1);
+      if(gi<0){gi=DUPG.length;DUPG.push([]);}
+      if(used[a.id]===undefined){DUPG[gi].push(a);used[a.id]=gi;}
+      if(used[b.id]===undefined){DUPG[gi].push(b);used[b.id]=gi;}
+    }
+  }
+  /* descartar grupos ya revisados (todos con revision=ok) */
+  DUPG=DUPG.filter(function(g){
+    return g.length>1 && g.some(function(p){return String(p.rv||'').toLowerCase()!=='ok';});
+  });
+}
+function rDups(){
+  detectDups();
+  var sec=document.getElementById('dupSec'),list=document.getElementById('dupList'),nEl=document.getElementById('dupN');
+  if(!sec||!list) return;
+  if(!DUPG.length){sec.style.display='none';list.innerHTML='';return;}
+  sec.style.display='block';
+  if(nEl)nEl.textContent=DUPG.length;
+  var h='';
+  DUPG.forEach(function(g,gi){
+    h+='<div class="card" style="border-color:#FECACA;margin-bottom:8px">';
+    h+='<div style="font-size:10px;font-weight:700;color:var(--err);margin-bottom:6px"><i class="fas fa-clone"></i> '+esc(g[0].wn)+' — "'+esc((g[0].ds||'').substring(0,50))+'"</div>';
+    g.forEach(function(p,ei){
+      h+='<div style="display:flex;align-items:center;gap:6px;padding:6px;background:'+(ei%2?'#fff':'var(--card2)')+';border-radius:8px;margin-bottom:4px">';
+      h+='<div style="flex:1;min-width:0">';
+      h+='<div style="font-size:10px;font-weight:700">'+esc(p.fe)+' · '+esc(p.hi||'—')+'-'+esc(p.hf||'—')+' · '+fmt2(p.ho)+'h'+(p.rv==='ok'?' <span style="color:var(--ok);font-size:9px">✓ revisado</span>':'')+'</div>';
+      h+='<div style="font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(p.cn||'—')+' · '+esc(p.pn||'—')+' · '+esc(p.tt||'')+'</div>';
+      h+='</div>';
+      h+='<button type="button" onclick="dupEdit('+gi+','+ei+')" style="background:#fff;border:1.5px solid var(--bdr);border-radius:8px;padding:6px 8px;color:var(--acc)" title="Editar"><i class="fas fa-pen"></i></button>';
+      h+='<button type="button" onclick="dupDel('+gi+','+ei+')" style="background:#fff;border:1.5px solid #FECACA;border-radius:8px;padding:6px 8px;color:var(--err)" title="Borrar"><i class="fas fa-trash"></i></button>';
+      h+='</div>';
+    });
+    h+='<button class="bt bt2 bts" onclick="dupAcc('+gi+')" style="width:100%;margin-top:2px"><i class="fas fa-check-double"></i> Aceptar — no son duplicados</button>';
+    h+='</div>';
+  });
+  list.innerHTML=h;
+}
+function _postParte(action,payload){
+  var url=ST.gsUrl||GS_URL; if(!url){tst('Sin URL de Sheets','er');return false;}
+  fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:action,data:payload})});
+  return true;
+}
+function dupDel(gi,ei){
+  var g=DUPG[gi]; if(!g)return; var p=g[ei]; if(!p)return;
+  if(!confirm('Borrar definitivamente el parte de '+p.wn+' del '+p.fe+' ('+fmt2(p.ho)+'h)?\nEsta acción elimina la fila en Google Sheets.'))return;
+  if(!_postParte('deleteParte',{id:p.id}))return;
+  PD=PD.filter(function(x){return x!==p;});
+  tst('Parte borrado de Sheets','ok');
+  rDash(); rCtrlSem(); rDups();
+}
+function dupAcc(gi){
+  var g=DUPG[gi]; if(!g)return;
+  g.forEach(function(p){
+    _postParte('updateParte',{id:p.id,fields:{revision:'ok'}});
+    p.rv='ok';
+  });
+  tst('Grupo marcado como revisado','ok');
+  rDups();
+}
+function dupEdit(gi,ei){
+  var g=DUPG[gi]; if(!g)return; var p=g[ei]; if(!p)return;
+  var ov=document.createElement('div');
+  ov.id='dupEdOv';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:999;display:flex;align-items:center;justify-content:center;padding:16px';
+  var clOpts='<option value="">—</option>'+CL.map(function(c){return'<option value="'+esc(c.n)+'"'+(c.n===p.cn?' selected':'')+'>'+esc(c.n)+'</option>';}).join('');
+  var prOpts='<option value="">—</option>'+PR.map(function(x){return'<option value="'+esc(x.n)+'"'+(x.n===p.pn?' selected':'')+'>'+esc(x.n)+'</option>';}).join('');
+  ov.innerHTML='<div style="background:#fff;border-radius:14px;padding:14px;width:100%;max-width:340px;max-height:90vh;overflow-y:auto">'
+   +'<div style="font-size:12px;font-weight:800;margin-bottom:8px"><i class="fas fa-pen" style="color:var(--acc)"></i> Editar parte — '+esc(p.wn)+'</div>'
+   +'<div class="fld"><label>Fecha</label><input type="date" id="deFe" value="'+esc(p.fe)+'"></div>'
+   +'<div class="r2"><div class="fld"><label>Inicio</label><input type="time" id="deHi" value="'+esc(p.hi||'')+'"></div>'
+   +'<div class="fld"><label>Fin</label><input type="time" id="deHf" value="'+esc(p.hf||'')+'"></div></div>'
+   +'<div class="fld"><label>Horas</label><input type="number" id="deHo" step="0.5" min="0" max="24" value="'+p.ho+'"></div>'
+   +'<div class="fld"><label>Cliente (se factura a)</label><select id="deCn">'+clOpts+'</select></div>'
+   +'<div class="fld"><label>Proyecto</label><select id="dePn">'+prOpts+'</select></div>'
+   +'<div class="fld"><label>Descripción</label><textarea id="deDs" rows="2">'+esc(p.ds||'')+'</textarea></div>'
+   +'<div style="display:flex;gap:6px;margin-top:4px">'
+   +'<button class="bt bt2 bts" id="deCanc" style="flex:1">Cancelar</button>'
+   +'<button class="bt bt1 bts" id="deSave" style="flex:1"><i class="fas fa-check"></i> Guardar en Sheets</button>'
+   +'</div></div>';
+  document.body.appendChild(ov);
+  document.getElementById('deCanc').onclick=function(){document.body.removeChild(ov);};
+  document.getElementById('deSave').onclick=function(){
+    var fe=document.getElementById('deFe').value;
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(fe)){tst('Fecha no válida','er');return;}
+    var fields={
+      fecha:fe,
+      inicio:document.getElementById('deHi').value||'',
+      fin:document.getElementById('deHf').value||'',
+      horas:parseHoras(document.getElementById('deHo').value),
+      cliente:document.getElementById('deCn').value||'',
+      proyecto:document.getElementById('dePn').value||'',
+      descripcion:document.getElementById('deDs').value.trim()
+    };
+    if(!_postParte('updateParte',{id:p.id,fields:fields}))return;
+    /* reflejar en local */
+    p.fe=fields.fecha;p.hi=fields.inicio;p.hf=fields.fin;p.ho=fields.horas;
+    p.cn=fields.cliente;p.pn=fields.proyecto;p.ds=fields.descripcion;
+    document.body.removeChild(ov);
+    tst('Parte actualizado en Sheets','ok');
+    rDash(); rCtrlSem(); rDups();
+  };
+}
+/* ============================================================
+   FACTURACIÓN MENSUAL — CSV adjunto a factura (v5.2)
+   Lee de Sheets el mes completo, filtra por cliente y genera
+   detalle + resumen por trabajador y actividad.
+============================================================ */
+function rFacSel(){
+  var sm=document.getElementById('facMes');
+  if(sm&&sm.options.length===0){
+    var MNOM=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    var now=new Date(),h='';
+    for(var i=0;i<12;i++){
+      var d=new Date(now.getFullYear(),now.getMonth()-i,1);
+      var val=d.getFullYear()+'-'+(d.getMonth()<9?'0':'')+(d.getMonth()+1);
+      /* Por defecto seleccionado el mes ANTERIOR (lo habitual al facturar) */
+      h+='<option value="'+val+'"'+(i===1?' selected':'')+'>'+MNOM[d.getMonth()]+' '+d.getFullYear()+'</option>';
+    }
+    sm.innerHTML=h;
+  }
+  var sc=document.getElementById('facCli');
+  if(sc){
+    var cur=sc.value;
+    sc.innerHTML='<option value="">Todos los clientes</option>'+CL.map(function(c){return'<option value="'+esc(c.n)+'">'+esc(c.n)+'</option>';}).join('');
+    if(cur&&CL.find(function(c){return c.n===cur;})) sc.value=cur;
+    else{var alu=CL.find(function(c){return c.n.toLowerCase().indexOf('alumed')>=0;});if(alu)sc.value=alu.n;}
+  }
+}
+function dlFacCSV(){
+  var url=ST.gsUrl||GS_URL; if(!url){tst('Sin URL de Sheets','er');return;}
+  var smEl=document.getElementById('facMes');
+  var mes=smEl?smEl.value:''; if(!mes){tst('Elige un mes','er');return;}
+  var cli=((document.getElementById('facCli')||{value:''}).value||'').trim();
+  var pa=mes.split('-'),y=parseInt(pa[0]),m=parseInt(pa[1]);
+  var from=mes+'-01';
+  var lastD=new Date(y,m,0).getDate();
+  var to=mes+'-'+(lastD<10?'0':'')+lastD;
+  var info=document.getElementById('facInfo');
+  if(info)info.innerHTML='<i class="fas fa-spinner fa-spin"></i> Descargando partes de '+mes+'...';
+  fetch(url+'?action=getPartes&from='+from+'&to='+to+'&_='+Date.now())
+   .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+   .then(function(res){
+     if(res.status!=='ok'||!Array.isArray(res.partes))throw new Error(res.msg||'Respuesta inesperada del script');
+     var rows=res.partes.map(function(p){return{
+       fe:sanitizeFecha(p.fecha||''), wn:p.nombre||'',
+       cn:String(p.cliente||'').trim(), pn:p.proyecto||'',
+       tt:p.tipo||'', hi:sanitizeHora(p.inicio||''), hf:sanitizeHora(p.fin||''),
+       ho:parseHoras(p.horas), ds:p.descripcion||'',
+       hx:(String(p.horas_extra||'')==='SI')
+     };}).filter(function(p){
+       if(!p.fe)return false;
+       if(p.tt==='Ausencia')return false; /* las ausencias no se facturan */
+       if(cli&&p.cn.toLowerCase()!==cli.toLowerCase())return false;
+       return true;
+     }).sort(function(a,b){return a.fe===b.fe?(a.wn||'').localeCompare(b.wn||''):a.fe.localeCompare(b.fe);});
+     if(!rows.length){
+       if(info)info.innerHTML='<span style="color:var(--err)">Sin partes de '+esc(cli||'ningún cliente')+' en '+mes+'</span>';
+       tst('Sin datos para ese mes/cliente','er');return;
+     }
+     var s=';',NL='\r\n';
+     var q=function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';};
+     var dec=function(n){return String(n.toFixed(1)).replace('.',',');}; /* coma decimal para Excel ES */
+     var out='FACTURACION MENSUAL'+s+q(cli||'Todos los clientes')+NL;
+     out+='Periodo'+s+from+' a '+to+NL;
+     out+='Generado'+s+tod()+s+'Strongforms - Partes Taller'+NL+NL;
+     out+=['Fecha','Trabajador','Cliente','Proyecto','Actividad','Inicio','Fin','Horas','Horas Extra','Descripcion'].join(s)+NL;
+     var tot=0,totHX=0,porW={},porT={};
+     rows.forEach(function(p){
+       out+=[p.fe,q(p.wn),q(p.cn),q(p.pn),q(p.tt),p.hi,p.hf,String(p.ho).replace('.',','),p.hx?'SI':'',q(p.ds)].join(s)+NL;
+       tot+=p.ho; if(p.hx)totHX+=p.ho;
+       porW[p.wn]=(porW[p.wn]||0)+p.ho;
+       porT[p.tt]=(porT[p.tt]||0)+p.ho;
+     });
+     out+=NL+'RESUMEN POR TRABAJADOR'+s+'Horas'+NL;
+     Object.keys(porW).sort(function(a,b){return porW[b]-porW[a];}).forEach(function(k){out+=q(k)+s+dec(porW[k])+NL;});
+     out+=NL+'RESUMEN POR ACTIVIDAD'+s+'Horas'+NL;
+     Object.keys(porT).sort(function(a,b){return porT[b]-porT[a];}).forEach(function(k){out+=q(k)+s+dec(porT[k])+NL;});
+     out+=NL+'TOTAL HORAS'+s+dec(tot)+NL;
+     out+='   de las cuales Horas Extra'+s+dec(totHX)+NL;
+     out+='TOTAL ENTRADAS'+s+rows.length+NL;
+     var fnCli=(cli||'todos').replace(/[^a-z0-9]+/gi,'_');
+     var blob=new Blob(['\uFEFF'+out],{type:'text/csv;charset=utf-8;'});
+     var u=URL.createObjectURL(blob);var a=document.createElement('a');
+     a.href=u;a.download='facturacion_'+fnCli+'_'+mes+'.csv';a.click();URL.revokeObjectURL(u);
+     if(info)info.innerHTML='<span style="color:var(--ok)">&#10003; '+rows.length+' entradas · '+tot.toFixed(1)+'h ('+esc(cli||'todos')+', '+mes+')</span>';
+     tst('CSV de facturación descargado','ok');
+   })
+   .catch(function(err){
+     if(info)info.innerHTML='<span style="color:var(--err)">Error: '+esc(err.message)+'</span>';
+     tst('Error: '+err.message,'er');
+   });
+}
 function gCSV(){
   var src=(PD_src==='sheets'&&PD.length)?PD:P;
   var s=';',hd=['Fecha','Trabajador','Cliente','Proyecto','Tipo','Inicio','Fin','Horas','Descripcion','Material','Maquinaria','Obs','Aus_Motivo','Horas_Extra','Prod_Unidad','Prod_Cantidad'];
@@ -1877,6 +2234,9 @@ try{
   rWG(); rTC(); rClDL(); rPrDL(); rSug(); rHoy(); uSB(); ldQR();
   /* Sync config en background — silencioso, sin bloquear UI */
   setTimeout(function(){syncConfig(false);}, 1200);
+  /* v5.2: reintento — como CL/PR ya no se cachean, si el primer sync falla
+     los dropdowns quedarían vacíos. Segundo intento a los 10s. */
+  setTimeout(function(){if(!CL.length)syncConfig(false);}, 10000);
 }catch(e){
   document.body.innerHTML='<div style="padding:40px;color:red;font-family:sans-serif"><b>Error init:</b><br>'+e.message+'<br><small>'+e.stack+'</small></div>';
 }

@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Vacaciones · Taller Metálico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{
+  --bg:#F8FAFC;--card:#fff;--card2:#F1F5F9;--fg:#0F172A;--muted:#64748B;--bdr:#E2E8F0;
+  --acc:#C2410C;--acc2:#EA580C;--ag:rgba(194,65,12,.12);
+  --ok:#16A34A;--err:#DC2626;--warn:#D97706;
+  --vac:#0891B2;--vacbg:#CFFAFE;--cierre:#7C3AED;--cierrebg:#EDE9FE;--festc:#DC2626;--festbg:#FEE2E2;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--fg);font-size:14px;padding-bottom:30px}
+h1{font-size:16px;font-weight:700}
+.hdr{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid var(--bdr);padding:10px 14px;display:flex;align-items:center;gap:10px}
+.hdr .logo{width:34px;height:34px;background:linear-gradient(135deg,var(--vac),#06B6D4);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;flex-shrink:0}
+.hdr h1{line-height:1.1}
+.hdr span{font-size:10px;color:var(--muted);display:block}
+.bk{margin-left:auto;background:none;border:1px solid var(--bdr);border-radius:8px;padding:7px 11px;font-size:12px;font-weight:600;color:var(--fg);cursor:pointer;display:flex;align-items:center;gap:5px}
+.bk:active{color:var(--acc);border-color:var(--acc)}
+.wrap{max-width:760px;margin:0 auto;padding:14px}
+.sec{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;letter-spacing:.4px}
+.sec i{color:var(--vac);font-size:11px}
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:14px}
+
+/* LOGIN */
+.ov{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
+.pbox{background:#fff;border-radius:18px;padding:24px;width:100%;max-width:340px;text-align:center}
+.pbox h2{font-size:15px;margin-bottom:4px}
+.pbox p{font-size:11px;color:var(--muted);margin-bottom:14px}
+.wsel{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.wsel button{padding:10px 4px;border:1.5px solid var(--bdr);border-radius:10px;background:#fff;font-size:11px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}
+.wsel button.on{border-color:var(--vac);background:var(--vacbg)}
+.wsel .av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700}
+.pbox input{width:100%;text-align:center;font-size:26px;letter-spacing:8px;background:var(--card2);border:2px solid var(--bdr);border-radius:10px;padding:11px;color:var(--vac);font-family:'IBM Plex Mono',monospace;margin-bottom:12px}
+.pbox input:focus{outline:none;border-color:var(--vac);box-shadow:0 0 0 3px rgba(8,145,178,.15)}
+
+/* BOTONES */
+.bt{padding:11px 14px;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;font-family:inherit}
+.bt1{background:linear-gradient(135deg,var(--vac),#06B6D4);color:#fff;box-shadow:0 2px 8px rgba(8,145,178,.2)}
+.bt2{background:#fff;border:1.5px solid var(--bdr);color:var(--fg)}
+.bt2:active{border-color:var(--vac)}
+.bt:active{transform:scale(.98)}
+
+/* SALDO OFICIAL */
+.official{background:linear-gradient(135deg,#0891B2,#06B6D4);border-radius:16px;padding:18px;color:#fff;margin-bottom:12px;position:relative;overflow:hidden}
+.official .lab{font-size:10px;text-transform:uppercase;letter-spacing:.5px;opacity:.85;font-weight:700}
+.official .big{font-family:'IBM Plex Mono',monospace;font-size:42px;font-weight:700;line-height:1;margin:6px 0}
+.official .big small{font-size:18px;opacity:.8}
+.official .sub{font-size:11px;opacity:.9}
+.official .bar{height:8px;background:rgba(255,255,255,.25);border-radius:4px;overflow:hidden;margin-top:10px}
+.official .bar > div{height:100%;background:#fff;border-radius:4px;transition:width .3s}
+
+/* MINI SALDOS */
+.minis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px}
+.mc{background:var(--card2);border:1px solid var(--bdr);border-radius:11px;padding:10px;text-align:center}
+.mc .v{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;line-height:1}
+.mc .v.vac{color:var(--vac)}.mc .v.cie{color:var(--cierre)}.mc .v.lab{color:var(--acc)}
+.mc .l{font-size:8px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:3px;letter-spacing:.3px}
+
+/* CALENDARIO */
+.calhead{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.calhead .yr{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;flex:1;text-align:center}
+.calhead button{width:34px;height:34px;border:1px solid var(--bdr);border-radius:9px;background:#fff;cursor:pointer;font-size:13px}
+.months{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.mo{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:10px}
+.mo .mt{font-size:11px;font-weight:700;text-transform:uppercase;text-align:center;margin-bottom:7px;letter-spacing:.3px}
+.dow{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:3px}
+.dow span{font-size:8px;text-align:center;color:var(--muted);font-weight:700}
+.dow span.we{color:#CBD5E1}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.dc{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:10px;border-radius:6px;cursor:pointer;position:relative;font-weight:500;user-select:none}
+.dc.empty{cursor:default}
+.dc.we{color:#94A3B8}
+.dc.fest{background:var(--festbg);color:var(--festc);font-weight:700}
+.dc.cierre{background:var(--cierrebg);color:var(--cierre);font-weight:700}
+.dc.vac{background:var(--vac);color:#fff;font-weight:700}
+.dc.sel{box-shadow:inset 0 0 0 2px var(--warn);background:#FEF9C3}
+.dc.pend{box-shadow:inset 0 0 0 2px var(--warn)}
+.dc.locked{opacity:.4;cursor:not-allowed}
+.dc.locked.vac{opacity:.55}
+.dc:active{transform:scale(.9)}
+
+/* LEYENDA */
+.leg{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0;font-size:10px}
+.leg span{display:flex;align-items:center;gap:5px;color:var(--muted)}
+.leg .dot{width:12px;height:12px;border-radius:4px}
+
+/* SOLICITUD */
+.req{background:#FEF9C3;border:1px solid #FDE68A;border-radius:12px;padding:12px;margin-top:12px}
+.req .n{font-size:11px;font-weight:700;color:#92400E}
+.reqlist{margin-top:6px;font-size:10px;color:#78350F;line-height:1.6}
+
+/* TABLA */
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{text-align:left;padding:7px 6px;border-bottom:2px solid var(--bdr);font-size:9px;text-transform:uppercase;color:var(--muted)}
+.tbl td{padding:7px 6px;border-bottom:1px solid var(--bdr)}
+.badge{display:inline-block;padding:2px 7px;border-radius:5px;font-size:9px;font-weight:700;text-transform:uppercase}
+.badge.pend{background:#FEF3C7;color:#92400E}
+.badge.apr{background:#DCFCE7;color:#166534}
+.badge.rec{background:#FEE2E2;color:#991B1B}
+
+.alert{background:#FFF7ED;border:1px solid #FED7AA;border-left:4px solid var(--acc);border-radius:10px;padding:11px;font-size:11px;color:#9A3412;margin-top:10px;line-height:1.5}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--vac);color:#fff;padding:11px 18px;border-radius:10px;font-size:12px;font-weight:600;z-index:200;box-shadow:0 4px 16px rgba(0,0,0,.2);max-width:90%;text-align:center}
+.hide{display:none!important}
+.adminbar{background:var(--cierrebg);border:1px solid #C4B5FD;border-radius:10px;padding:10px;margin-bottom:12px;font-size:11px;color:var(--cierre);display:flex;align-items:center;gap:7px;line-height:1.4}
+.modes{display:flex;gap:6px;margin-bottom:10px}
+.modes button{flex:1;padding:10px;border:1.5px solid var(--bdr);border-radius:10px;background:#fff;font-size:12px;font-weight:700;cursor:pointer}
+.modes button.onv{border-color:var(--vac);background:var(--vacbg);color:var(--vac)}
+.modes button.onc{border-color:var(--cierre);background:var(--cierrebg);color:var(--cierre)}
+.note{font-size:9px;color:var(--muted);margin-top:4px;line-height:1.4}
+.pcard{background:#FFF7ED;border:1px solid #FED7AA;border-left:4px solid var(--err);border-radius:12px;padding:12px;margin-bottom:10px}
+.pcard .ph{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.pcard .av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;flex-shrink:0}
+.pcard .pn{font-weight:700;font-size:13px}
+.pcard .pm{font-size:9px;color:var(--muted)}
+.pcard .pd{font-size:11px;color:#78350F;line-height:1.5;margin-bottom:8px}
+.pcard .pb{display:flex;gap:8px}
+.pcard .pb button{flex:1;padding:9px;border-radius:9px;font-size:12px;font-weight:700;border:none;cursor:pointer}
+.pcard .bAp{background:var(--ok);color:#fff}
+.pcard .bRe{background:#fff;border:1.5px solid var(--err);color:var(--err)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="ov" id="login">
+  <div class="pbox">
+    <h2><i class="fas fa-umbrella-beach" style="color:var(--vac)"></i> Vacaciones</h2>
+    <p>Elige tu nombre e introduce tu PIN</p>
+    <div class="wsel" id="wsel"></div>
+    <input type="password" id="pin" inputmode="numeric" placeholder="••••" maxlength="6">
+    <button class="bt bt1" style="width:100%" onclick="doLogin()"><i class="fas fa-unlock"></i> Entrar</button>
+  </div>
+</div>
+
+<div class="hdr">
+  <div class="logo"><i class="fas fa-umbrella-beach"></i></div>
+  <div><h1>Planificador de Vacaciones</h1><span style="color:#DC2626;font-weight:700">v0.7 BETA · conectado a Sheets</span></div>
+  <button class="bk" onclick="volverPartes()"><i class="fas fa-arrow-left"></i> Partes</button>
+</div>
+
+<div class="wrap" id="app" style="display:none">
+
+  <div id="adminBar" class="adminbar hide">
+    <i class="fas fa-user-shield"></i>
+    <div><b>Modo administrador.</b> Marcas <b>CIERRES de empresa</b> (restan a todos) y cargas festivos oficiales. No marcas vacaciones de nadie.</div>
+  </div>
+
+  <div class="modes" id="modes">
+    <button id="mVac" class="onv" onclick="setMode('vac')"><i class="fas fa-umbrella-beach"></i> Mis vacaciones</button>
+    <button id="mCie" class="hide" onclick="setMode('cierre')"><i class="fas fa-building-lock"></i> Cierre empresa</button>
+  </div>
+
+  <div class="official">
+    <div class="lab">Cuenta oficial · convenio (días naturales)</div>
+    <div class="big"><span id="natUsed">0</span><small>/<span id="natMax">30</span></small></div>
+    <div class="sub">Te quedan <b id="natLeft">30</b> días naturales · incluye cierres de empresa</div>
+    <div class="bar"><div id="natBar" style="width:0%"></div></div>
+  </div>
+
+  <div class="minis">
+    <div class="mc"><div class="v vac" id="mVacLab">0</div><div class="l">Mis días laborables</div></div>
+    <div class="mc"><div class="v cie" id="mCieLab">0</div><div class="l">Cierre empresa (lab.)</div></div>
+    <div class="mc"><div class="v lab" id="mTotLab">0</div><div class="l">Total laborables</div></div>
+  </div>
+  <div class="note" style="text-align:center">Curiosidad: 1 día laborable = <b>1,4</b> naturales (7÷5). El total anual se redondea hacia arriba.</div>
+  <div id="arrInfo" class="note" style="display:none;text-align:center;background:#ECFEFF;border:1px solid #A5F3FC;border-radius:8px;padding:7px;margin-top:6px;color:#0E7490"></div>
+
+  <div class="leg">
+    <span><span class="dot" style="background:var(--vac)"></span> Mis vacaciones (aprob.)</span>
+    <span><span class="dot" style="background:#FEF9C3;box-shadow:inset 0 0 0 2px var(--warn)"></span> Sin enviar</span>
+    <span><span class="dot" style="background:var(--festbg);border:1px solid var(--festc)"></span> Festivo</span>
+    <span><span class="dot" style="background:var(--cierrebg);border:1px solid var(--cierre)"></span> Cierre empresa</span>
+  </div>
+
+  <div class="calhead">
+    <button onclick="chgYear(-1)"><i class="fas fa-chevron-left"></i></button>
+    <div class="yr" id="yr">2026</div>
+    <button onclick="chgYear(1)"><i class="fas fa-chevron-right"></i></button>
+  </div>
+  <div id="festBtnWrap" class="hide" style="margin-bottom:12px">
+  </div>
+  <div class="months" id="months"></div>
+
+  <div class="req" id="reqBox" style="display:none">
+    <div class="n" id="reqTitle"><i class="fas fa-paper-plane"></i> Cambios sin guardar</div>
+    <div class="reqlist" id="reqList"></div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="bt bt2" style="flex:1" onclick="clearSel()"><i class="fas fa-eraser"></i> Descartar</button>
+      <button class="bt bt1" style="flex:2" id="sendBtn" onclick="enviar()"><i class="fas fa-paper-plane"></i> Enviar solicitud</button>
+    </div>
+    <div class="alert" id="overAlert" style="display:none"></div>
+  </div>
+
+  <div id="aprobWrap" class="hide">
+    <div class="sec"><i class="fas fa-bell" style="color:var(--err)"></i> Solicitudes pendientes <span id="pendCount" style="color:var(--err);text-transform:none"></span></div>
+    <div id="pendList"></div>
+  </div>
+
+  <div id="exportWrap" class="hide">
+    <div class="sec"><i class="fas fa-file-csv"></i> Exportar para Lola (CSV)</div>
+    <div class="card">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div class="fld"><label>Trabajador</label>
+          <select id="expW"><option value="all">Todos</option></select>
+        </div>
+        <div class="fld"><label>Periodo</label>
+          <select id="expP">
+            <option value="year">Año completo</option>
+            <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+            <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+            <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+            <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+          </select>
+        </div>
+      </div>
+      <button class="bt bt1" style="width:100%" onclick="exportCSV()"><i class="fas fa-download"></i> Descargar CSV (<span id="expYr">2026</span>)</button>
+      <p class="note" style="margin-top:6px">Una fila por tramo contiguo: desde, hasta, nº días naturales, nº laborables. Solo incluye solicitudes <b>aprobadas</b> + cierres.</p>
+    </div>
+  </div>
+
+  <div id="histWrap">
+    <div class="sec"><i class="fas fa-list-check"></i> Mis solicitudes</div>
+    <div class="card" style="padding:6px 12px">
+      <table class="tbl" id="tblReq"><thead><tr><th>Enviada</th><th>Días</th><th>Estado</th></tr></thead><tbody></tbody></table>
+      <p id="noReq" style="text-align:center;color:var(--muted);font-size:11px;padding:14px 0">Aún no has enviado solicitudes</p>
+    </div>
+  </div>
+
+  <div class="alert">
+    <b>ℹ Conectado a Google Sheets.</b> Flujo: trabajador envía → Sergio aprueba aquí → Sergio descarga CSV y lo envía a Lola para expediente. Arrastre de enero pendiente del volcado del año anterior.
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   VACACIONES — backend real (Apps Script v4.1)
+   URL canónica (misma que partes v5.3)
+============================================================ */
+var GS_URL = 'https://script.google.com/macros/s/AKfycbz8GF7XtR_bWvCm85pl_gHnseTCTBAKDaXwCaM9PBVvnDZ7zuIfFp2H71QFAidXF0KE/exec';
+
+/* W (trabajadores), FEST (festivos por año), CIERRES y VACS se llenan desde Sheets.
+   Arrancan vacíos — Google Sheets es la única fuente de verdad (SSOT). */
+var W = [];
+var FEST = {};           // { '2026': ['YYYY-MM-DD', ...] }
+var CIERRES = [];        // ['YYYY-MM-DD', ...]
+var VACS = {};           // { wid: ['YYYY-MM-DD' aprobadas...] }
+var REQS = [];           // solicitudes (pendientes + resueltas) reconstruidas desde Sheets
+
+var CFG = { natMax:30, natPorLab:1.4, proMax:2, eneroLimite:15 };
+
+/* Arrastre del año anterior (días naturales sobrantes). Pendiente: volcado histórico.
+   De momento 0 para todos hasta que carguemos el año previo. */
+var ARRASTRE = {};
+function sobranteAnioAnterior(wid){ var a=ARRASTRE[wid]; return (a&&a[year-1])?a[year-1]:0; }
+
+var curW=null, selWid=null, year=2026, mode='vac';
+var sel = [];
+var HOY = new Date().toISOString().slice(0,10);  // 'YYYY-MM-DD'
+function esPasado(s){ return s < HOY; }
+var MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+var DOW=['L','M','X','J','V','S','D'];
+
+/* ============================================================
+   CARGA DESDE BACKEND (JSONP para lectura, como partes)
+============================================================ */
+function jsonp(url, cb){
+  var s=document.createElement('script');
+  var fn='__vcb'+Date.now()+Math.floor(Math.random()*1000);
+  window[fn]=function(data){ try{cb(data);}finally{ delete window[fn]; if(s.parentNode)s.parentNode.removeChild(s); } };
+  s.src=url+(url.indexOf('?')>=0?'&':'?')+'callback='+fn;
+  s.onerror=function(){ delete window[fn]; if(s.parentNode)s.parentNode.removeChild(s); cb(null); };
+  document.body.appendChild(s);
+}
+
+/* Reconstruye W desde trabajadores de Sheets */
+function cargarTrabajadores(cb){
+  jsonp(GS_URL+'?action=sync', function(d){
+    if(d && d.trabajadores){
+      W = d.trabajadores.map(function(t){
+        return {id:t.id, n:t.nombre, ini:t.iniciales, c:t.color, pin:String(t.pin),
+                admin:(String(t.rol).toLowerCase()==='admin')};
+      });
+    }
+    // festivos del año en curso
+    if(d && d.festivos){ FEST[String(year)] = d.festivos.slice(); }
+    if(d && d.cierres){ CIERRES = d.cierres.slice(); }
+    cb && cb();
+  });
+}
+
+/* Carga vacaciones + festivos + cierres del año y reconstruye VACS/REQS */
+function cargarVacaciones(cb){
+  jsonp(GS_URL+'?action=getVacaciones&year='+year, function(d){
+    VACS={}; REQS=[];
+    if(d){
+      if(d.festivos) FEST[String(year)]=d.festivos.slice();
+      if(d.cierres)  CIERRES=d.cierres.slice();
+      if(d.vacaciones){
+        // agrupar filas por id de solicitud
+        var byId={};
+        d.vacaciones.forEach(function(v){
+          var k=String(v.id);
+          if(!byId[k]) byId[k]={id:v.id, wid:+v.worker_id, nombre:v.nombre,
+                                 dias:[], estado:v.estado, fechaEnv:v.fecha_solicitud, aprob:v.aprobado_por};
+          byId[k].dias.push(v.fecha);
+          byId[k].estado=v.estado; // última gana (todas iguales por solicitud)
+        });
+        Object.keys(byId).forEach(function(k){
+          var q=byId[k];
+          // estado normalizado: pendiente/aprobado/rechazado -> pend/apr/rec
+          var est=(q.estado==='aprobado')?'apr':(q.estado==='rechazado')?'rec':'pend';
+          REQS.push({id:q.id, wid:q.wid, dias:q.dias.sort(), estado:est, fechaEnv:q.fechaEnv});
+          if(est==='apr'){ VACS[q.wid]=(VACS[q.wid]||[]).concat(q.dias); }
+        });
+        Object.keys(VACS).forEach(function(w){ VACS[w]=VACS[w].sort(); });
+      }
+    }
+    cb && cb();
+  });
+}
+
+/* POST (no-cors, como partes — write-only, sin leer respuesta) */
+function gsPost(action, data, cb){
+  fetch(GS_URL, {method:'POST', mode:'no-cors',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({action:action, data:data})
+  }).then(function(){ cb && cb(true); }).catch(function(){ cb && cb(false); });
+}
+
+
+function renderWsel(){
+  document.getElementById('wsel').innerHTML = W.map(function(w){
+    return '<button data-w="'+w.id+'" onclick="pickW('+w.id+')"><span class="av" style="background:'+w.c+'">'+w.ini+'</span>'+w.n+(w.admin?' <i class="fas fa-shield-halved" style="font-size:8px;color:var(--cierre)"></i>':'')+'</button>';
+  }).join('');
+}
+function pickW(id){selWid=id;document.querySelectorAll('#wsel button').forEach(function(b){b.className=(+b.dataset.w===id)?'on':'';});}
+function doLogin(){
+  if(!selWid){toast('Elige tu nombre');return;}
+  var w=W.find(function(x){return x.id===selWid;});
+  if(document.getElementById('pin').value.trim()!==w.pin){toast('PIN incorrecto');return;}
+  curW=w;
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').style.display='block';
+  if(w.admin){
+    document.getElementById('adminBar').classList.remove('hide');
+    document.getElementById('mCie').classList.remove('hide');
+    document.getElementById('histWrap').classList.add('hide');
+    document.getElementById('aprobWrap').classList.remove('hide');
+    document.getElementById('exportWrap').classList.remove('hide');
+    fillExpW();
+    setMode('cierre');
+    document.getElementById('modes').classList.add('hide');
+  } else { setMode('vac'); document.getElementById('modes').classList.add('hide'); }
+  // cargar vacaciones reales del año y pintar
+  toast('Cargando vacaciones...');
+  cargarVacaciones(function(){ render(); });
+}
+
+function esWE(s){var d=new Date(s+'T12:00:00').getDay();return d===0||d===6;}
+function esFest(s){return (FEST[String(year)]||[]).indexOf(s)>=0;}
+function esCierre(s){return CIERRES.indexOf(s)>=0;}
+function esLaborable(s){return !esWE(s)&&!esFest(s);}
+
+function esEneroBisagra(s){
+  // día dentro del 1-15 de enero del año en curso
+  return s.indexOf(year+'-01-')===0 && (+s.split('-')[2])<=CFG.eneroLimite;
+}
+function vacDiasDe(wid){
+  // devuelve {ene:[...laborables 1-15 ene], resto:[...laborables resto año]}
+  var ap=(VACS[wid]||[]);
+  var pend=REQS.filter(function(q){return q.wid===wid&&q.estado==='pend';})
+               .reduce(function(a,q){return a.concat(q.dias);},[]);
+  var arr=ap.concat(pend);
+  if(curW&&wid===curW.id&&mode==='vac') arr=arr.concat(sel);
+  arr=arr.filter(function(v,i){return arr.indexOf(v)===i;})
+         .filter(function(s){return s.startsWith(year)&&esLaborable(s);});
+  return {
+    ene: arr.filter(esEneroBisagra),
+    resto: arr.filter(function(s){return !esEneroBisagra(s);})
+  };
+}
+function cierreLab(){
+  var arr=CIERRES.filter(function(s){return s.startsWith(year)&&esLaborable(s);});
+  if(curW&&curW.admin&&mode==='cierre') arr=arr.concat(sel.filter(esLaborable));
+  return arr.filter(function(v,i){return arr.indexOf(v)===i;}).length;
+}
+function roundUp(x){return Math.ceil(x-1e-9);}
+
+function calc(){
+  if(!curW)return;
+  var v=vacDiasDe(curW.id);
+  var cieLab=cierreLab();
+  // laborables que cuentan contra el saldo de ESTE año:
+  //  - todos los del resto del año + cierres
+  //  - los de enero 1-15 SOLO si exceden el sobrante del año anterior
+  var sobr=sobranteAnioAnterior(curW.id);                 // naturales sobrantes 2025
+  var sobrLab=sobr/CFG.natPorLab;                          // su equivalente en laborables
+  var eneLab=v.ene.length;
+  var eneCubiertos=Math.min(eneLab,sobrLab);               // laborables ene cubiertos por arrastre
+  var eneAlAnioActual=Math.max(0,eneLab-eneCubiertos);     // los que rebosan al año actual
+  var totLabActual = v.resto.length + cieLab + eneAlAnioActual;
+  var natUsed = roundUp(totLabActual * CFG.natPorLab);
+  var arrastreUsadoNat = roundUp(eneCubiertos * CFG.natPorLab);
+
+  document.getElementById('natUsed').textContent=natUsed;
+  document.getElementById('natMax').textContent=CFG.natMax;
+  document.getElementById('natLeft').textContent=Math.max(0,CFG.natMax-natUsed);
+  document.getElementById('natBar').style.width=Math.min(100,natUsed/CFG.natMax*100)+'%';
+  document.getElementById('mVacLab').textContent=(v.ene.length+v.resto.length);
+  document.getElementById('mCieLab').textContent=cieLab;
+  document.getElementById('mTotLab').textContent=(v.ene.length+v.resto.length+cieLab);
+
+  // línea arrastre
+  var ai=document.getElementById('arrInfo');
+  if(ai){
+    if(sobr>0){
+      ai.style.display='block';
+      ai.innerHTML='<i class="fas fa-arrow-rotate-left"></i> Arrastre '+(year-1)+': <b>'+sobr+'</b> nat. disponibles para el 1-15 ene · usados: <b>'+arrastreUsadoNat+'</b>';
+    } else ai.style.display='none';
+  }
+  return {natUsed:natUsed,totLab:totLabActual};
+}
+
+function pad(n){return n<10?'0'+n:''+n;}
+function render(){
+  document.getElementById('yr').textContent=year;
+  var myVac=(VACS[curW.id]||[]);
+  var pend=REQS.filter(function(q){return q.wid===curW.id&&q.estado==='pend';})
+               .reduce(function(a,q){return a.concat(q.dias);},[]);
+  var h='';
+  for(var m=0;m<12;m++){
+    h+='<div class="mo"><div class="mt">'+MESES[m]+'</div><div class="dow">';
+    DOW.forEach(function(d,i){h+='<span class="'+(i>4?'we':'')+'">'+d+'</span>';});
+    h+='</div><div class="grid">';
+    var off=(new Date(year,m,1).getDay()+6)%7;
+    for(var i=0;i<off;i++) h+='<div class="dc empty"></div>';
+    var dim=new Date(year,m+1,0).getDate();
+    for(var d=1;d<=dim;d++){
+      var s=year+'-'+pad(m+1)+'-'+pad(d);
+      var cls='dc';
+      if(esWE(s))cls+=' we';
+      if(esFest(s))cls+=' fest';
+      else if(esCierre(s))cls+=' cierre';
+      else if(myVac.indexOf(s)>=0)cls+=' vac';
+      else if(pend.indexOf(s)>=0)cls+=' pend';
+      if(sel.indexOf(s)>=0)cls+=' sel';
+      if(!curW.admin && esPasado(s) && !esWE(s) && !esFest(s))cls+=' locked';
+      h+='<div class="'+cls+'" onclick="tap(\''+s+'\')">'+d+'</div>';
+    }
+    h+='</div></div>';
+  }
+  document.getElementById('months').innerHTML=h;
+  calc();renderReq();renderHist();renderPend();
+}
+function tap(s){
+  if(esFest(s)){toast('Festivo — no consume saldo');return;}
+  if(esWE(s)){toast('Fin de semana');return;}
+  // Bloqueo de pasado SOLO para trabajador (admin edita libremente)
+  if(!curW.admin && esPasado(s)){toast('🔒 No puedes modificar días pasados');return;}
+  if(mode==='cierre'){
+    if(!curW.admin){toast('Solo admin');return;}
+    var i=CIERRES.indexOf(s); if(i>=0)CIERRES.splice(i,1);else CIERRES.push(s);
+    CIERRES.sort();render();return;
+  }
+  if(esCierre(s)){toast('Cierre de empresa — ya cuenta');return;}
+  var i=sel.indexOf(s); if(i>=0)sel.splice(i,1);else sel.push(s);
+  sel.sort();render();
+}
+function clearSel(){sel=[];render();}
+function setMode(m){
+  mode=m;sel=[];
+  document.getElementById('mVac').className=(m==='vac'?'onv':'');
+  document.getElementById('mCie').className='hide';
+  if(curW&&curW.admin){document.getElementById('mCie').className=(m==='cierre'?'onc':'');}
+  render();
+}
+function chgYear(d){
+  year+=d;sel=[];
+  var e=document.getElementById('expYr');if(e)e.textContent=year;
+  // recargar festivos + vacaciones del nuevo año desde Sheets
+  cargarVacaciones(function(){render();});
+}
+
+function renderReq(){
+  var box=document.getElementById('reqBox');
+  if(sel.length===0){box.style.display='none';return;}
+  box.style.display='block';
+  if(mode==='cierre'){
+    document.getElementById('reqTitle').innerHTML='<i class="fas fa-building-lock"></i> Cierres a guardar';
+    document.getElementById('sendBtn').innerHTML='<i class="fas fa-save"></i> Guardar cierres';
+    document.getElementById('reqList').innerHTML='<b>'+sel.length+'</b> días de cierre: '+sel.map(fmtCorto).join(' · ');
+  }else{
+    document.getElementById('reqTitle').innerHTML='<i class="fas fa-paper-plane"></i> Vacaciones sin enviar';
+    document.getElementById('sendBtn').innerHTML='<i class="fas fa-paper-plane"></i> Enviar solicitud';
+    var lab=sel.filter(esLaborable).length;
+    document.getElementById('reqList').innerHTML='<b>'+sel.length+'</b> días ('+lab+' laborables = '+roundUp(lab*CFG.natPorLab)+' naturales): '+sel.map(fmtCorto).join(' · ');
+  }
+  var c=calc(),al=document.getElementById('overAlert');
+  if(mode==='vac'&&c.natUsed>CFG.natMax){
+    al.style.display='block';
+    al.innerHTML='⚠ Te pasas del límite: '+c.natUsed+'/'+CFG.natMax+' naturales. No deberías poder enviar esto.';
+  } else al.style.display='none';
+}
+function fmtCorto(s){var p=s.split('-');return p[2]+'/'+p[1];}
+function enviar(){
+  if(sel.length===0)return;
+  if(mode==='cierre'){
+    var diasC=sel.slice();
+    gsPost('saveCierre',{dias:diasC},function(){
+      diasC.forEach(function(s){if(CIERRES.indexOf(s)<0)CIERRES.push(s);});
+      CIERRES.sort();sel=[];toast('Cierres guardados');
+      cargarVacaciones(function(){render();});
+    });
+    return;
+  }
+  var c=calc();
+  if(c.natUsed>CFG.natMax){toast('Bloqueado: superas los '+CFG.natMax+' naturales');return;}
+  var reqId=Date.now();
+  var dias=sel.slice();
+  gsPost('saveVacacion',{
+    id:reqId, worker_id:curW.id, nombre:curW.n,
+    dias:dias, fecha_solicitud:HOY
+  },function(){
+    toast('📨 Solicitud enviada — pendiente de aprobación de Sergio');
+    sel=[];
+    cargarVacaciones(function(){render();});
+  });
+}
+function renderHist(){
+  if(curW.admin)return;
+  var tb=document.querySelector('#tblReq tbody');
+  var mine=REQS.filter(function(q){return q.wid===curW.id;});
+  document.getElementById('noReq').style.display=mine.length?'none':'block';
+  var est={pend:'<span class="badge pend">Pendiente</span>',apr:'<span class="badge apr">Aprobado</span>',rec:'<span class="badge rec">Rechazado</span>'};
+  tb.innerHTML=mine.map(function(q){
+    return '<tr><td>'+q.fechaEnv+'</td><td>'+q.dias.map(fmtCorto).join(', ')+'</td><td>'+est[q.estado]+'</td></tr>';
+  }).join('');
+}
+
+function renderPend(){
+  if(!curW||!curW.admin)return;
+  var pend=REQS.filter(function(q){return q.estado==='pend';});
+  document.getElementById('pendCount').textContent=pend.length?('· '+pend.length):'· ninguna';
+  var c=document.getElementById('pendList');
+  if(!pend.length){c.innerHTML='<div class="card" style="text-align:center;color:var(--muted);font-size:11px;padding:16px">Sin solicitudes pendientes</div>';return;}
+  c.innerHTML=pend.map(function(q){
+    var w=W.find(function(x){return x.id===q.wid;})||{n:q.wid,c:'#999',ini:'?'};
+    var lab=q.dias.filter(esLaborable).length;
+    var nat=roundUp(lab*CFG.natPorLab);
+    return '<div class="pcard">'+
+      '<div class="ph"><span class="av" style="background:'+w.c+'">'+w.ini+'</span>'+
+      '<div><div class="pn">'+w.n+'</div><div class="pm">Enviada '+q.fechaEnv+'</div></div></div>'+
+      '<div class="pd"><b>'+q.dias.length+'</b> días ('+lab+' laborables ≈ '+nat+' nat): '+q.dias.map(fmtCorto).join(' · ')+'</div>'+
+      '<div class="pb"><button class="bAp" onclick="aprobar(\''+q.id+'\')"><i class="fas fa-check"></i> Aprobar</button>'+
+      '<button class="bRe" onclick="rechazar(\''+q.id+'\')"><i class="fas fa-xmark"></i> Rechazar</button></div></div>';
+  }).join('');
+}
+function aprobar(id){
+  var q=REQS.find(function(x){return String(x.id)===String(id);});
+  if(!q)return;
+  gsPost('aprobarVacacion',{id:q.id, aprobado_por:curW.n},function(){
+    toast('✅ Aprobada — '+(W.find(function(w){return w.id===q.wid;})||{}).n);
+    cargarVacaciones(function(){render();});
+  });
+}
+function rechazar(id){
+  var q=REQS.find(function(x){return String(x.id)===String(id);});
+  if(!q)return;
+  gsPost('rechazarVacacion',{id:q.id, aprobado_por:curW.n},function(){
+    toast('❌ Rechazada');
+    cargarVacaciones(function(){render();});
+  });
+}
+
+function fillExpW(){
+  var s=document.getElementById('expW');
+  W.filter(function(w){return !w.admin;}).forEach(function(w){
+    var o=document.createElement('option');o.value=w.id;o.textContent=w.n;s.appendChild(o);
+  });
+}
+/* Agrupa fechas (ordenadas) en tramos de días naturales contiguos */
+function agruparTramos(fechas){
+  var f=fechas.slice().sort(), tr=[], cur=null;
+  f.forEach(function(s){
+    var d=new Date(s+'T12:00:00');
+    if(cur){
+      var prev=new Date(cur.hasta+'T12:00:00');
+      var diff=(d-prev)/86400000;
+      if(diff===1){cur.hasta=s;return;}
+      tr.push(cur);
+    }
+    cur={desde:s,hasta:s};
+  });
+  if(cur)tr.push(cur);
+  return tr;
+}
+function natEntre(desde,hasta){ // días naturales inclusive
+  return Math.round((new Date(hasta+'T12:00:00')-new Date(desde+'T12:00:00'))/86400000)+1;
+}
+function labEntre(desde,hasta){ // laborables (no WE, no fest) en el tramo
+  var n=0,d=new Date(desde+'T12:00:00'),h=new Date(hasta+'T12:00:00');
+  while(d<=h){
+    var s=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+    if(esLaborable(s))n++;
+    d.setDate(d.getDate()+1);
+  }
+  return n;
+}
+function exportCSV(){
+  var wfil=document.getElementById('expW').value;
+  var pfil=document.getElementById('expP').value;
+  function enPeriodo(s){
+    if(!s.startsWith(year))return false;
+    if(pfil==='year')return true;
+    return (+s.split('-')[1])===(+pfil);
+  }
+  var rows=[['Trabajador','Tipo','Desde','Hasta','Dias_naturales','Dias_laborables','Estado']];
+  var wids = wfil==='all' ? W.filter(function(w){return !w.admin;}).map(function(w){return w.id;}) : [+wfil];
+  wids.forEach(function(wid){
+    var nombre=(W.find(function(w){return w.id===wid;})||{}).n||wid;
+    var dias=(VACS[wid]||[]).filter(enPeriodo);
+    agruparTramos(dias).forEach(function(t){
+      rows.push([nombre,'Vacaciones',t.desde,t.hasta,natEntre(t.desde,t.hasta),labEntre(t.desde,t.hasta),'Aprobado']);
+    });
+  });
+  // cierres (solo si todos o sin filtro de trabajador concreto)
+  if(wfil==='all'){
+    agruparTramos(CIERRES.filter(enPeriodo)).forEach(function(t){
+      rows.push(['(TODOS)','Cierre empresa',t.desde,t.hasta,natEntre(t.desde,t.hasta),labEntre(t.desde,t.hasta),'Impuesto']);
+    });
+  }
+  if(rows.length===1){toast('No hay vacaciones aprobadas en ese periodo');return;}
+  var csv=rows.map(function(r){return r.join(';');}).join('\r\n'); // ; para Excel ES
+  var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='vacaciones_'+(wfil==='all'?'todos':(W.find(function(w){return w.id===+wfil;})||{}).n)+'_'+year+(pfil==='year'?'':'_m'+pfil)+'.csv';
+  a.click();URL.revokeObjectURL(url);
+  toast('CSV descargado');
+}
+
+function volverPartes(){location.href='index.html';}
+function toast(m){var t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(function(){t.remove();},2800);}
+
+/* ARRANQUE: cargar trabajadores y festivos desde Sheets, luego pintar login */
+(function boot(){
+  document.getElementById('wsel').innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:11px;padding:10px"><i class="fas fa-spinner fa-spin"></i> Cargando desde Sheets...</div>';
+  cargarTrabajadores(function(){
+    if(!W.length){
+      document.getElementById('wsel').innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--err);font-size:11px;padding:10px">No se pudo cargar. Reintenta.</div>';
+      return;
+    }
+    renderWsel();
+  });
+})();
+</script>
+</body>
+</html>

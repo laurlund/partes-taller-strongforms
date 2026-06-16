@@ -141,7 +141,7 @@ h1{font-size:16px;font-weight:700}
 
 <div class="hdr">
   <div class="logo"><i class="fas fa-umbrella-beach"></i></div>
-  <div><h1>Planificador de Vacaciones</h1><span>Vacaciones <span style="color:#DC2626;font-weight:700">v0.8 · 16/06/2026 (TEST)</span></span></div>
+  <div><h1>Planificador de Vacaciones</h1><span>Vacaciones <span style="color:#DC2626;font-weight:700">v0.9 · 16/06/2026 (TEST)</span></span></div>
   <button class="bk" onclick="volverPartes()"><i class="fas fa-arrow-left"></i> Partes</button>
 </div>
 
@@ -171,6 +171,7 @@ h1{font-size:16px;font-weight:700}
   </div>
   <div class="note" style="text-align:center">Curiosidad: 1 día laborable = <b>1,4</b> naturales (7÷5). El total anual se redondea hacia arriba.</div>
   <div id="arrInfo" class="note" style="display:none;text-align:center;background:#ECFEFF;border:1px solid #A5F3FC;border-radius:8px;padding:7px;margin-top:6px;color:#0E7490"></div>
+  <div id="recEnero" class="note" style="display:none;text-align:center;background:#FEFCE8;border:1px solid #FDE68A;border-radius:8px;padding:8px;margin-top:6px;color:#92400E"></div>
 
   <div class="leg">
     <span><span class="dot" style="background:var(--vac)"></span> Mis vacaciones (aprob.)</span>
@@ -425,6 +426,18 @@ function calc(){
       ai.innerHTML='<i class="fas fa-arrow-rotate-left"></i> Arrastre '+(year-1)+': <b>'+sobr+'</b> nat. disponibles para el 1-15 ene · usados: <b>'+arrastreUsadoNat+'</b>';
     } else ai.style.display='none';
   }
+
+  // recordatorio: días sin usar disfrutables hasta el 15 de enero del año siguiente
+  var re=document.getElementById('recEnero');
+  if(re){
+    var restan=Math.max(0,CFG.natMax-natUsed);
+    if(!curW.admin && restan>0){
+      re.style.display='block';
+      re.innerHTML='<i class="fas fa-hourglass-half"></i> Te quedan <b>'+restan+'</b> días naturales de '+year+
+        '. Puedes disfrutarlos hasta el <b>15/01/'+(year+1)+'</b> (navega a '+(year+1)+' para marcarlos).';
+    } else re.style.display='none';
+  }
+
   return {natUsed:natUsed,totLab:totLabActual};
 }
 

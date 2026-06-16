@@ -222,7 +222,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
 <header class="hdr">
  <button class="bk" id="bkBtn" onclick="goBack()"><i class="fas fa-arrow-left"></i></button>
  <div class="logo"><i class="fas fa-fire"></i></div>
- <div><h1>Taller Metálico</h1><span>Partes diarios <span style="color:#DC2626;font-weight:700">v5.3 · 11/06/2026</span></span></div>
+ <div><h1>Taller Metálico</h1><span>Partes diarios <span style="color:#DC2626;font-weight:700">v5.4 · 16/06/2026 (TEST)</span></span></div>
  <div class="sb loc" id="sb"><i class="fas fa-hdd"></i> Local</div>
 </header>
  
@@ -2003,11 +2003,11 @@ function detectDups(){
       var sameDesc=(a._nd&&a._nd.length>=6&&a._nd===b._nd);
       var r1=sameDesc&&(a._tm&&b._tm&&Math.abs(a._tm-b._tm)<=30*60*1000);
       var r2=sameDesc&&(a.fe===b.fe&&a.hi===b.hi&&a.hf===b.hf&&a.ho===b.ho);
-      /* R3: misma franja exacta del mismo día, enviados con <30 min de diferencia
-         → doble envío aunque corrigiera una errata en la descripción */
-      var r3=(a.fe===b.fe&&a.hi===b.hi&&a.hf===b.hf&&a.ho===b.ho&&a.ho>0
-              &&a._tm&&b._tm&&Math.abs(a._tm-b._tm)<=30*60*1000);
-      if(!r1&&!r2&&!r3) continue;
+      /* v5.4: R3 eliminada. Marcaba duplicado por misma franja+horas IGNORANDO la
+         descripción, lo que daba falsos positivos cuando un trabajador parte su
+         jornada en 2 actividades distintas con la misma franja (error de hora no
+         relevante). R1 y R2 ya cazan los dobles envíos reales (misma descripción). */
+      if(!r1&&!r2) continue;
       /* unir en grupo existente o crear nuevo */
       var gi=used[a.id]!==undefined?used[a.id]:(used[b.id]!==undefined?used[b.id]:-1);
       if(gi<0){gi=DUPG.length;DUPG.push([]);}

@@ -141,7 +141,7 @@ h1{font-size:16px;font-weight:700}
 
 <div class="hdr">
   <div class="logo"><i class="fas fa-umbrella-beach"></i></div>
-  <div><h1>Planificador de Vacaciones</h1><span>Vacaciones <span style="color:#DC2626;font-weight:700">v0.9 · 16/06/2026 (TEST)</span></span></div>
+  <div><h1>Planificador de Vacaciones</h1><span>Vacaciones <span style="color:#DC2626;font-weight:700">v1.0 · 16/06/2026</span></span></div>
   <button class="bk" onclick="volverPartes()"><i class="fas fa-arrow-left"></i> Partes</button>
 </div>
 
@@ -661,7 +661,7 @@ function exportCSV(){
   toast('CSV descargado');
 }
 
-function volverPartes(){location.href='test.html';}
+function volverPartes(){location.href='index.html';}
 function toast(m){var t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(function(){t.remove();},2800);}
 
 /* ARRANQUE: cargar trabajadores y festivos desde Sheets, luego pintar login */

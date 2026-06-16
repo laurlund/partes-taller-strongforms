@@ -141,7 +141,7 @@ h1{font-size:16px;font-weight:700}
 
 <div class="hdr">
   <div class="logo"><i class="fas fa-umbrella-beach"></i></div>
-  <div><h1>Planificador de Vacaciones</h1><span>Vacaciones <span style="color:#DC2626;font-weight:700">v1.0 · 16/06/2026</span></span></div>
+  <div><h1>Planificador de Vacaciones</h1><span>Vacaciones <span style="color:#DC2626;font-weight:700">v1.3 · 16/06/2026</span></span></div>
   <button class="bk" onclick="volverPartes()"><i class="fas fa-arrow-left"></i> Partes</button>
 </div>
 
@@ -149,12 +149,20 @@ h1{font-size:16px;font-weight:700}
 
   <div id="adminBar" class="adminbar hide">
     <i class="fas fa-user-shield"></i>
-    <div><b>Modo administrador.</b> Marcas <b>CIERRES de empresa</b> (restan a todos) y cargas festivos oficiales. No marcas vacaciones de nadie.</div>
+    <div><b>Modo administrador.</b> Alterna entre <b>Mis vacaciones</b> (solo para ti) y <b>Cierre empresa</b> (resta a todos). Puedes editar fechas pasadas.</div>
   </div>
 
   <div class="modes" id="modes">
     <button id="mVac" class="onv" onclick="setMode('vac')"><i class="fas fa-umbrella-beach"></i> Mis vacaciones</button>
     <button id="mCie" class="hide" onclick="setMode('cierre')"><i class="fas fa-building-lock"></i> Cierre empresa</button>
+    <button id="mEdt" class="hide" onclick="setMode('editw')"><i class="fas fa-user-pen"></i> Editar trabajador</button>
+  </div>
+  <div id="edtBar" class="hide" style="background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;padding:10px;margin-bottom:10px">
+    <div class="fld" style="margin:0">
+      <label style="color:var(--err)">Editando vacaciones de (auto-aprobado)</label>
+      <select id="edtW" onchange="onEdtW()"><option value="">-- elige trabajador --</option></select>
+    </div>
+    <div class="note" style="margin-top:6px;color:#991B1B">Clic en día libre = añadir · clic en su día = quitar. Cambios inmediatos en Sheets.</div>
   </div>
 
   <div class="official">
@@ -214,6 +222,7 @@ h1{font-size:16px;font-weight:700}
         <div class="fld"><label>Periodo</label>
           <select id="expP">
             <option value="year">Año completo</option>
+            <option value="yearplus">Año + enero siguiente (hasta 15)</option>
             <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
             <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
             <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
@@ -262,6 +271,8 @@ var ARRASTRE = {};
 function sobranteAnioAnterior(wid){ var a=ARRASTRE[wid]; return (a&&a[year-1])?a[year-1]:0; }
 
 var curW=null, selWid=null, year=2026, mode='vac';
+var edtWid=null;  // trabajador en edición (modo admin 'editw')
+var VACS_ALL=[];  // todas las filas de vacaciones (para export con rango)
 var sel = [];
 var HOY = new Date().toISOString().slice(0,10);  // 'YYYY-MM-DD'
 function esPasado(s){ return s < HOY; }
@@ -296,31 +307,49 @@ function cargarTrabajadores(cb){
   });
 }
 
-/* Carga vacaciones + festivos + cierres del año y reconstruye VACS/REQS */
+/* Carga TODAS las vacaciones (para poder calcular arrastre del año anterior),
+   reconstruye VACS/REQS del año en curso y ARRASTRE del año previo. */
 function cargarVacaciones(cb){
-  jsonp(GS_URL+'?action=getVacaciones&year='+year, function(d){
-    VACS={}; REQS=[];
+  jsonp(GS_URL+'?action=getVacaciones', function(d){   // sin year => todas
+    VACS={}; REQS=[]; ARRASTRE={};
+    VACS_ALL=(d&&d.vacaciones)?d.vacaciones.slice():[];
     if(d){
       if(d.festivos) FEST[String(year)]=d.festivos.slice();
       if(d.cierres)  CIERRES=d.cierres.slice();
       if(d.vacaciones){
-        // agrupar filas por id de solicitud
         var byId={};
         d.vacaciones.forEach(function(v){
           var k=String(v.id);
           if(!byId[k]) byId[k]={id:v.id, wid:+v.worker_id, nombre:v.nombre,
                                  dias:[], estado:v.estado, fechaEnv:v.fecha_solicitud, aprob:v.aprobado_por};
           byId[k].dias.push(v.fecha);
-          byId[k].estado=v.estado; // última gana (todas iguales por solicitud)
+          byId[k].estado=v.estado;
         });
+        var aprobadasPrev={}; // {wid: [dias aprobados del año-1]} para el sobrante
         Object.keys(byId).forEach(function(k){
           var q=byId[k];
-          // estado normalizado: pendiente/aprobado/rechazado -> pend/apr/rec
           var est=(q.estado==='aprobado')?'apr':(q.estado==='rechazado')?'rec':'pend';
-          REQS.push({id:q.id, wid:q.wid, dias:q.dias.sort(), estado:est, fechaEnv:q.fechaEnv});
-          if(est==='apr'){ VACS[q.wid]=(VACS[q.wid]||[]).concat(q.dias); }
+          var delActual=q.dias.filter(function(s){return s.startsWith(String(year));});
+          var delPrev=q.dias.filter(function(s){return s.startsWith(String(year-1));});
+          if(delActual.length){
+            REQS.push({id:q.id, wid:q.wid, dias:delActual.sort(), estado:est, fechaEnv:q.fechaEnv});
+            if(est==='apr'){ VACS[q.wid]=(VACS[q.wid]||[]).concat(delActual); }
+          }
+          if(est==='apr' && delPrev.length){
+            aprobadasPrev[q.wid]=(aprobadasPrev[q.wid]||[]).concat(delPrev);
+          }
         });
         Object.keys(VACS).forEach(function(w){ VACS[w]=VACS[w].sort(); });
+        // sobrante año-1 = 30 - naturales consumidos (laborables*1,4 roundup)
+        Object.keys(aprobadasPrev).forEach(function(w){
+          var labs=aprobadasPrev[w].filter(function(s){
+            var dd=new Date(s+'T12:00:00').getDay();
+            return dd!==0 && dd!==6 && (FEST[String(year-1)]||[]).indexOf(s)<0;
+          }).length;
+          var natPrev=Math.ceil(labs*CFG.natPorLab - 1e-9);
+          var sobr=Math.max(0, CFG.natMax - natPrev);
+          ARRASTRE[w]={}; ARRASTRE[w][year-1]=sobr;
+        });
       }
     }
     cb && cb();
@@ -346,20 +375,24 @@ function doLogin(){
   if(!selWid){toast('Elige tu nombre');return;}
   var w=W.find(function(x){return x.id===selWid;});
   if(document.getElementById('pin').value.trim()!==w.pin){toast('PIN incorrecto');return;}
+  entrar(w);
+}
+function entrar(w){
   curW=w;
   document.getElementById('login').style.display='none';
   document.getElementById('app').style.display='block';
   if(w.admin){
     document.getElementById('adminBar').classList.remove('hide');
     document.getElementById('mCie').classList.remove('hide');
-    document.getElementById('histWrap').classList.add('hide');
+    document.getElementById('mEdt').classList.remove('hide');
+    document.getElementById('histWrap').classList.remove('hide');
     document.getElementById('aprobWrap').classList.remove('hide');
     document.getElementById('exportWrap').classList.remove('hide');
     fillExpW();
-    setMode('cierre');
-    document.getElementById('modes').classList.add('hide');
+    fillEdtW();
+    setMode('vac');
+    document.getElementById('modes').classList.remove('hide');
   } else { setMode('vac'); document.getElementById('modes').classList.add('hide'); }
-  // cargar vacaciones reales del año y pintar
   toast('Cargando vacaciones...');
   cargarVacaciones(function(){ render(); });
 }
@@ -444,8 +477,10 @@ function calc(){
 function pad(n){return n<10?'0'+n:''+n;}
 function render(){
   document.getElementById('yr').textContent=year;
-  var myVac=(VACS[curW.id]||[]);
-  var pend=REQS.filter(function(q){return q.wid===curW.id&&q.estado==='pend';})
+  /* en modo 'editw' el calendario muestra los días del trabajador elegido */
+  var focoWid=(mode==='editw'&&edtWid)?edtWid:curW.id;
+  var myVac=(VACS[focoWid]||[]);
+  var pend=REQS.filter(function(q){return q.wid===focoWid&&q.estado==='pend';})
                .reduce(function(a,q){return a.concat(q.dias);},[]);
   var h='';
   for(var m=0;m<12;m++){
@@ -475,6 +510,32 @@ function render(){
 function tap(s){
   if(esFest(s)){toast('Festivo — no consume saldo');return;}
   if(esWE(s)){toast('Fin de semana');return;}
+  // Modo admin 'editar trabajador': añade/quita días de OTRO trabajador, inmediato
+  if(mode==='editw'){
+    if(!curW.admin){return;}
+    if(!edtWid){toast('Elige un trabajador primero');return;}
+    if(esCierre(s)){toast('Cierre de empresa');return;}
+    var yaTiene=(VACS[edtWid]||[]).indexOf(s)>=0;
+    if(yaTiene){
+      // quitar
+      gsPost('deleteVacacionDia',{worker_id:edtWid, fecha:s},function(){
+        toast('Día quitado');
+        cargarVacaciones(function(){render();});
+      });
+    } else {
+      // añadir (auto-aprobado, como admin)
+      var rid=Date.now();
+      var nom=(W.find(function(w){return w.id===edtWid;})||{}).n||'';
+      gsPost('saveVacacion',{id:rid, worker_id:edtWid, nombre:nom, dias:[s],
+        fecha_solicitud:HOY, es_admin:1},function(){
+        gsPost('aprobarVacacion',{id:rid, aprobado_por:curW.n},function(){
+          toast('Día añadido y aprobado');
+          cargarVacaciones(function(){render();});
+        });
+      });
+    }
+    return;
+  }
   // Bloqueo de pasado SOLO para trabajador (admin edita libremente)
   if(!curW.admin && esPasado(s)){toast('🔒 No puedes modificar días pasados');return;}
   if(mode==='cierre'){
@@ -492,9 +553,22 @@ function setMode(m){
   mode=m;sel=[];
   document.getElementById('mVac').className=(m==='vac'?'onv':'');
   document.getElementById('mCie').className='hide';
-  if(curW&&curW.admin){document.getElementById('mCie').className=(m==='cierre'?'onc':'');}
+  document.getElementById('mEdt').className='hide';
+  document.getElementById('edtBar').classList.add('hide');
+  if(curW&&curW.admin){
+    document.getElementById('mCie').className=(m==='cierre'?'onc':'');
+    document.getElementById('mEdt').className=(m==='editw'?'onc':'');
+    if(m==='editw') document.getElementById('edtBar').classList.remove('hide');
+  }
   render();
 }
+function fillEdtW(){
+  var s=document.getElementById('edtW');
+  W.filter(function(w){return !w.admin;}).forEach(function(w){
+    var o=document.createElement('option');o.value=w.id;o.textContent=w.n;s.appendChild(o);
+  });
+}
+function onEdtW(){ edtWid=+document.getElementById('edtW').value||null; sel=[]; render(); }
 function chgYear(d){
   year+=d;sel=[];
   var e=document.getElementById('expYr');if(e)e.textContent=year;
@@ -540,15 +614,23 @@ function enviar(){
   var dias=sel.slice();
   gsPost('saveVacacion',{
     id:reqId, worker_id:curW.id, nombre:curW.n,
-    dias:dias, fecha_solicitud:HOY
+    dias:dias, fecha_solicitud:HOY, es_admin:(curW.admin?1:0)
   },function(){
-    toast('📨 Solicitud enviada — pendiente de aprobación de Sergio');
-    sel=[];
-    cargarVacaciones(function(){render();});
+    if(curW.admin){
+      // el admin auto-aprueba sus propias vacaciones
+      gsPost('aprobarVacacion',{id:reqId, aprobado_por:curW.n},function(){
+        toast('✅ Tus vacaciones guardadas y aprobadas');
+        sel=[];
+        cargarVacaciones(function(){render();});
+      });
+    } else {
+      toast('📨 Solicitud enviada — pendiente de aprobación de Sergio');
+      sel=[];
+      cargarVacaciones(function(){render();});
+    }
   });
 }
 function renderHist(){
-  if(curW.admin)return;
   var tb=document.querySelector('#tblReq tbody');
   var mine=REQS.filter(function(q){return q.wid===curW.id;});
   document.getElementById('noReq').style.display=mine.length?'none':'block';
@@ -631,26 +713,45 @@ function exportCSV(){
   var wfil=document.getElementById('expW').value;
   var pfil=document.getElementById('expP').value;
   function enPeriodo(s){
-    if(!s.startsWith(year))return false;
-    if(pfil==='year')return true;
+    if(pfil==='year') return s.startsWith(String(year));
+    if(pfil==='yearplus'){
+      // todo el año + del 1 al 15 de enero del año siguiente
+      if(s.startsWith(String(year))) return true;
+      return s.indexOf((year+1)+'-01-')===0 && (+s.split('-')[2])<=CFG.eneroLimite;
+    }
+    // mes concreto del año en curso
+    if(!s.startsWith(String(year))) return false;
     return (+s.split('-')[1])===(+pfil);
   }
-  var rows=[['Trabajador','Tipo','Desde','Hasta','Dias_naturales','Dias_laborables','Estado']];
-  var wids = wfil==='all' ? W.filter(function(w){return !w.admin;}).map(function(w){return w.id;}) : [+wfil];
-  wids.forEach(function(wid){
-    var nombre=(W.find(function(w){return w.id===wid;})||{}).n||wid;
-    var dias=(VACS[wid]||[]).filter(enPeriodo);
-    agruparTramos(dias).forEach(function(t){
-      rows.push([nombre,'Vacaciones',t.desde,t.hasta,natEntre(t.desde,t.hasta),labEntre(t.desde,t.hasta),'Aprobado']);
+  var estTxt={pendiente:'Pendiente',aprobado:'Aprobado',rechazado:'Rechazado'};
+  var rows=[['Trabajador','Tipo','Desde','Hasta','Dias_naturales','Dias_laborables','Estado','Fecha_solicitud']];
+  var wids = wfil==='all' ? W.map(function(w){return w.id;}) : [+wfil];
+  // agrupar VACS_ALL (crudas) por id, filtrando trabajador y periodo
+  var byId={};
+  VACS_ALL.forEach(function(v){
+    if(wids.indexOf(+v.worker_id)<0) return;
+    if(!enPeriodo(v.fecha)) return;
+    var k=String(v.id);
+    if(!byId[k]) byId[k]={wid:+v.worker_id, nombre:v.nombre, dias:[],
+                          estado:v.estado, fechaEnv:v.fecha_solicitud};
+    byId[k].dias.push(v.fecha);
+  });
+  Object.keys(byId).forEach(function(k){
+    var q=byId[k];
+    var nombre=q.nombre||(W.find(function(w){return w.id===q.wid;})||{}).n||q.wid;
+    agruparTramos(q.dias).forEach(function(t){
+      rows.push([nombre,'Vacaciones',t.desde,t.hasta,natEntre(t.desde,t.hasta),
+                 labEntre(t.desde,t.hasta),estTxt[q.estado]||q.estado,q.fechaEnv||'']);
     });
   });
-  // cierres (solo si todos o sin filtro de trabajador concreto)
+  // cierres de empresa (solo cuando se exporta 'todos')
   if(wfil==='all'){
     agruparTramos(CIERRES.filter(enPeriodo)).forEach(function(t){
-      rows.push(['(TODOS)','Cierre empresa',t.desde,t.hasta,natEntre(t.desde,t.hasta),labEntre(t.desde,t.hasta),'Impuesto']);
+      rows.push(['(TODOS)','Cierre empresa',t.desde,t.hasta,natEntre(t.desde,t.hasta),
+                 labEntre(t.desde,t.hasta),'Impuesto','']);
     });
   }
-  if(rows.length===1){toast('No hay vacaciones aprobadas en ese periodo');return;}
+  if(rows.length===1){toast('No hay vacaciones en ese periodo');return;}
   var csv=rows.map(function(r){return r.join(';');}).join('\r\n'); // ; para Excel ES
   var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
   var url=URL.createObjectURL(blob);
@@ -661,7 +762,7 @@ function exportCSV(){
   toast('CSV descargado');
 }
 
-function volverPartes(){location.href='index.html';}
+function volverPartes(){ location.href = 'index.html' + (curW?('?w='+encodeURIComponent(curW.id)):''); }
 function toast(m){var t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(function(){t.remove();},2800);}
 
 /* ARRANQUE: cargar trabajadores y festivos desde Sheets, luego pintar login */
@@ -671,6 +772,13 @@ function toast(m){var t=document.createElement('div');t.className='toast';t.text
     if(!W.length){
       document.getElementById('wsel').innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--err);font-size:11px;padding:10px">No se pudo cargar. Reintenta.</div>';
       return;
+    }
+    // Autologin si viene ?w=ID desde partes (PIN ya validado allí) → evita segundo PIN
+    var m=location.search.match(/[?&]w=([^&]+)/);
+    if(m){
+      var wid=decodeURIComponent(m[1]);
+      var w=W.find(function(x){return String(x.id)===String(wid);});
+      if(w){ entrar(w); return; }
     }
     renderWsel();
   });

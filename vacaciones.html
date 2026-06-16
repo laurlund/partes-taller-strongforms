@@ -141,7 +141,7 @@ h1{font-size:16px;font-weight:700}
 
 <div class="hdr">
   <div class="logo"><i class="fas fa-umbrella-beach"></i></div>
-  <div><h1>Planificador de Vacaciones</h1><span style="color:#DC2626;font-weight:700">v0.7 BETA · conectado a Sheets</span></div>
+  <div><h1>Planificador de Vacaciones</h1><span>Vacaciones <span style="color:#DC2626;font-weight:700">v0.8 · 16/06/2026 (TEST)</span></span></div>
   <button class="bk" onclick="volverPartes()"><i class="fas fa-arrow-left"></i> Partes</button>
 </div>
 
@@ -466,8 +466,9 @@ function tap(s){
   if(!curW.admin && esPasado(s)){toast('🔒 No puedes modificar días pasados');return;}
   if(mode==='cierre'){
     if(!curW.admin){toast('Solo admin');return;}
-    var i=CIERRES.indexOf(s); if(i>=0)CIERRES.splice(i,1);else CIERRES.push(s);
-    CIERRES.sort();render();return;
+    // marca en 'sel' para que aparezca el panel "Guardar cierres" y se envíe a Sheets
+    var ci=sel.indexOf(s); if(ci>=0)sel.splice(ci,1);else sel.push(s);
+    sel.sort();render();return;
   }
   if(esCierre(s)){toast('Cierre de empresa — ya cuenta');return;}
   var i=sel.indexOf(s); if(i>=0)sel.splice(i,1);else sel.push(s);
@@ -647,7 +648,7 @@ function exportCSV(){
   toast('CSV descargado');
 }
 
-function volverPartes(){location.href='index.html';}
+function volverPartes(){location.href='test.html';}
 function toast(m){var t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(function(){t.remove();},2800);}
 
 /* ARRANQUE: cargar trabajadores y festivos desde Sheets, luego pintar login */

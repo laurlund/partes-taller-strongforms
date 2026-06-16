@@ -109,6 +109,11 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
 .tc i{display:block;font-size:15px;margin-bottom:2px}
 .tc.on{border-color:var(--acc);background:#FFF7ED;color:var(--fg)}
 .tc.on i{color:var(--acc)}
+/* Ausencia destacada en rojo */
+.tc[data-tid="ausencia"] i{color:var(--err)}
+.tc[data-tid="ausencia"]{border-color:#FECACA;color:var(--err)}
+.tc[data-tid="ausencia"].on{border-color:var(--err);background:#FEF2F2;color:var(--err)}
+.tc[data-tid="ausencia"].on i{color:var(--err)}
  
 /* SUGGESTIONS */
 .sbar{display:flex;gap:4px;overflow-x:auto;padding-bottom:3px;margin-bottom:3px;scrollbar-width:none}
@@ -334,7 +339,6 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
      <div class="fld"><label>Tipo de ausencia</label>
       <select id="ausMotivo">
        <option value="">-- Selecciona motivo --</option>
-       <option value="Vacaciones">Vacaciones</option>
        <option value="Enfermedad — justificante">Enfermedad — justificante</option>
        <option value="Baja médica (IT)">Baja médica (IT)</option>
        <option value="Asuntos propios">Asuntos propios</option>
@@ -543,6 +547,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
  <button class="nb" data-t="Hoy" onclick="sw('Hoy')"><i class="fas fa-calendar-day"></i><span>Hoy</span></button>
  <button class="nb" data-t="Hist" onclick="sw('Hist')"><i class="fas fa-history"></i><span>Historial</span></button>
  <button class="nb" data-t="Admin" onclick="sw('Admin')"><i class="fas fa-cog"></i><span>Admin</span></button>
+ <button class="nb" onclick="location.href='vacaciones.html'"><i class="fas fa-umbrella-beach"></i><span>Vacaciones</span></button>
 </nav>
 <div class="tbox" id="tb"></div>
  
@@ -636,7 +641,6 @@ if(!TT) TT = [
   {id:'matric',  l:'Matricería',        i:'fa-cogs'},
   {id:'pintura', l:'Pintura',           i:'fa-paint-roller'},
   {id:'limpieza',l:'Limpieza',          i:'fa-broom'},
-  {id:'horas_x', l:'Horas Extra',       i:'fa-bolt'},
   {id:'ausencia',l:'Ausencia',          i:'fa-user-slash'},
   {id:'otros',   l:'Otros',             i:'fa-ellipsis-h'}
 ];
@@ -1352,9 +1356,8 @@ function syncConfig(manual){
       /* Tipos de trabajo */
       if(d.tipos&&d.tipos.length){
         TT=d.tipos.map(function(t){return{id:t.id,l:t.nombre,i:t.icono||'fa-wrench'};});
-        /* Garantizar Horas Extra y Ausencia siempre presentes */
-        if(!TT.find(function(t){return t.id==='horas_x';}))
-          TT.push({id:'horas_x',l:'Horas Extra',i:'fa-bolt'});
+        /* 'ausencia' es un tipo especial del sistema (UI propia) que no vive en Sheets:
+           se garantiza siempre. 'horas_x' NO se reinyecta — se calcula en el motor al guardar. */
         if(!TT.find(function(t){return t.id==='ausencia';}))
           TT.push({id:'ausencia',l:'Ausencia',i:'fa-user-slash'});
         svT(); rTC(); cambios.push('tipos');

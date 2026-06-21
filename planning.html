@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Planificación · Taller Metálico</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  /* Paleta heredada de vacaciones_PROD para cohesión del sistema */
+  :root{
+    --acc:#0F766E;--bg:#F8FAFC;--card:#FFFFFF;--ink:#0F172A;--mut:#64748B;--bd:#E2E8F0;
+    --vac:#0891B2;--vacbg:#CFFAFE;
+    --cierre:#7C3AED;--cierrebg:#EDE9FE;
+    --festc:#DC2626;--festbg:#FEE2E2;
+    --pres:#0F766E;--presbg:#CCFBF1;
+    --na:#F1F5F9;--nac:#CBD5E1;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;padding:14px;max-width:1100px;margin:0 auto}
+  h1{font-size:19px;font-weight:800;letter-spacing:-.3px}
+  .ver{color:var(--festc);font-weight:700;font-size:11px}
+  header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  header .ico{width:38px;height:38px;border-radius:10px;background:var(--presbg);color:var(--acc);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+  .sub{font-size:11px;color:var(--mut)}
+
+  /* Login admin */
+  .gate{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:22px;max-width:340px;margin:40px auto;text-align:center}
+  .gate h2{font-size:16px;margin-bottom:6px}
+  .gate p{font-size:12px;color:var(--mut);margin-bottom:16px}
+  .gate input{width:100%;font-size:22px;text-align:center;letter-spacing:8px;padding:12px;border:2px solid var(--bd);border-radius:10px;margin-bottom:12px}
+  .gate input:focus{outline:none;border-color:var(--acc)}
+  .gate button{width:100%;padding:12px;font-size:15px;font-weight:700;color:#fff;background:var(--acc);border:none;border-radius:10px;cursor:pointer}
+  .gate .err{color:var(--festc);font-size:12px;min-height:16px;margin-bottom:8px}
+
+  /* Controles */
+  .ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+  .seg{display:inline-flex;border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+  .seg button{padding:8px 16px;font-size:13px;font-weight:600;background:var(--card);border:none;cursor:pointer;color:var(--mut)}
+  .seg button.on{background:var(--acc);color:#fff}
+  .nav{display:inline-flex;gap:6px;align-items:center;margin-left:auto}
+  .nav button{width:34px;height:34px;border:1px solid var(--bd);border-radius:9px;background:var(--card);cursor:pointer;font-size:14px;color:var(--ink)}
+  .nav .lbl{font-weight:700;font-size:13px;min-width:140px;text-align:center}
+  .nav .hoy{width:auto;padding:0 12px;font-weight:600;color:var(--acc)}
+
+  /* Banner estado */
+  .banner{font-size:11px;padding:8px 11px;border-radius:9px;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+  .banner.load{background:#FEF9C3;color:#854D0E}
+  .banner.ok{background:var(--presbg);color:var(--acc)}
+  .banner.warn{background:var(--festbg);color:var(--festc)}
+
+  /* Matriz */
+  .wrap{overflow-x:auto;border:1px solid var(--bd);border-radius:12px;background:var(--card)}
+  table{border-collapse:collapse;width:100%;font-size:12px}
+  th,td{border-bottom:1px solid var(--bd);border-right:1px solid var(--bd);text-align:center;white-space:nowrap}
+  th{background:#F8FAFC;font-weight:700;padding:8px 4px;font-size:11px;position:sticky;top:0;z-index:2}
+  th.we{color:var(--mut)}
+  th.festd{color:var(--festc)}
+  th.cied{color:var(--cierre)}
+  .nameC{text-align:left;padding:8px 10px;font-weight:600;position:sticky;left:0;background:var(--card);z-index:1;min-width:130px}
+  .nameC .av{display:inline-flex;width:22px;height:22px;border-radius:50%;color:#fff;font-size:9px;font-weight:700;align-items:center;justify-content:center;margin-right:7px;vertical-align:middle}
+  td.cell{padding:0;height:38px;width:38px;font-size:14px}
+  td.we{background:#FAFBFC}
+  td.fest{background:var(--festbg)}
+  td.cierre{background:var(--cierrebg)}
+  td.vac{background:var(--vacbg)}
+  td.pres{background:var(--presbg)}
+  td.pres .gl{color:var(--pres)}
+  td.na{background:var(--na)}
+  td.na .gl{color:var(--nac);font-size:11px}
+  .totR td{font-weight:800;background:#F8FAFC;color:var(--acc);border-top:2px solid var(--bd)}
+  .totR .nameC{color:var(--ink);font-size:11px}
+
+  /* Leyenda */
+  .leg{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-size:11px;color:var(--mut)}
+  .leg span{display:inline-flex;align-items:center;gap:6px}
+  .leg .sw{width:16px;height:16px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:10px}
+  .note{font-size:11px;color:var(--mut);margin-top:12px;line-height:1.5}
+  .hide{display:none!important}
+  @media(max-width:560px){ td.cell,th{font-size:10px} .nameC{min-width:104px} }
+
+  .btnPrint{padding:8px 14px;font-size:13px;font-weight:700;color:#fff;background:var(--cierre);border:none;border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+
+  /* ====== ÁREA DE IMPRESIÓN (oculta en pantalla) ====== */
+  #printArea{display:none}
+  .pPage{page-break-after:always}
+  .pPage:last-child{page-break-after:auto}
+  .pBlock{margin-bottom:7px}
+  .pBlock:last-child{margin-bottom:0}
+  .pHead{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1.5px solid var(--ink);padding-bottom:3px;margin-bottom:4px}
+  .pHead h2{font-size:12px;font-weight:800}
+  .pHead .meta{font-size:9px;color:var(--mut);text-align:right;line-height:1.3}
+  .pTable{border-collapse:collapse;width:100%;table-layout:fixed;font-size:9px}
+  .pTable th,.pTable td{border:1px solid #94A3B8;text-align:center;padding:1px 0;overflow:hidden}
+  .pTable th{background:#E2E8F0;font-weight:700;font-size:8px}
+  .pTable td.pn{text-align:left;padding:1px 5px;font-weight:600;font-size:9px;width:120px;white-space:nowrap}
+  .pTable th.we,.pTable td.we{background:#F1F5F9;color:#64748B}
+  .pTable th.festd{background:var(--festbg);color:var(--festc)}
+  .pTable th.cied{background:var(--cierrebg);color:var(--cierre)}
+  .pTable td.fest{background:var(--festbg);color:var(--festc)}
+  .pTable td.cierre{background:var(--cierrebg);color:var(--cierre)}
+  .pTable td.vac{background:var(--vacbg);color:var(--vac)}
+  .pTable td.pres{background:var(--presbg);color:var(--pres);font-weight:700}
+  .pTable td.na{color:#CBD5E1}
+  .pTable tr.totR td{background:#E2E8F0;font-weight:800;color:var(--acc)}
+  .pLeg{margin-top:8px;font-size:11px;color:var(--mut);display:flex;flex-wrap:wrap;gap:14px}
+  .pLeg b{color:var(--ink)}
+
+  @media print{
+    @page{size:A4 landscape;margin:8mm}
+    body{padding:0;max-width:none;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #gate,#app{display:none!important}
+    #printArea{display:block!important}
+    .pTable th,.pTable td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN ADMIN -->
+<div id="gate" class="gate">
+  <h2><i class="fas fa-shield-halved" style="color:var(--cierre)"></i> Solo administrador</h2>
+  <p>Introduce el PIN de administrador para ver la planificación del taller.</p>
+  <div class="err" id="gateErr"></div>
+  <input id="gatePin" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" placeholder="••••" maxlength="8">
+  <button onclick="checkPin()">Entrar</button>
+</div>
+
+<!-- APP -->
+<div id="app" class="hide">
+  <header>
+    <div class="ico"><i class="fas fa-people-group"></i></div>
+    <div>
+      <h1>Planificación del taller</h1>
+      <div class="sub">Quién viene y con cuánta gente cuentas · <span class="ver">v1.0 · 21/06/2026</span></div>
+    </div>
+  </header>
+
+  <div class="ctrls">
+    <div class="seg">
+      <button id="bSem" class="on" onclick="setVista('sem')">Semana</button>
+      <button id="bMes" onclick="setVista('mes')">Mes</button>
+    </div>
+    <div class="nav">
+      <button onclick="mover(-1)" title="Anterior"><i class="fas fa-chevron-left"></i></button>
+      <span class="lbl" id="rangoLbl">—</span>
+      <button onclick="mover(1)" title="Siguiente"><i class="fas fa-chevron-right"></i></button>
+      <button class="hoy" onclick="irHoy()">Hoy</button>
+    </div>
+    <button class="btnPrint" onclick="imprimir()"><i class="fas fa-print"></i> Imprimir / PDF</button>
+  </div>
+
+  <div id="banner" class="banner load"><i class="fas fa-spinner fa-spin"></i> Cargando…</div>
+
+  <div class="wrap">
+    <table id="grid"><tbody></tbody></table>
+  </div>
+
+  <div class="leg">
+    <span><span class="sw" style="background:var(--presbg);color:var(--pres)"><i class="fas fa-check"></i></span> Parte registrado</span>
+    <span><span class="sw" style="background:var(--vacbg);color:var(--vac)"><i class="fas fa-umbrella-beach"></i></span> Vacaciones</span>
+    <span><span class="sw" style="background:var(--festbg);color:var(--festc)"><i class="fas fa-star"></i></span> Festivo</span>
+    <span><span class="sw" style="background:var(--cierrebg);color:var(--cierre)"><i class="fas fa-building-lock"></i></span> Cierre empresa</span>
+    <span><span class="sw" style="background:var(--na);color:var(--nac)">–</span> Sin dato (no se cuenta)</span>
+  </div>
+
+  <p class="note">
+    <b>Sin dato</b> = ese día no hay parte, vacación, festivo ni cierre. No se calcula: puede que el dato llegue después o que tengas que reclamarlo al trabajador.
+    La fila inferior cuenta cuántos trabajadores tienen parte registrado cada día laborable.
+    Solo presencia, sin horas: un día con varios partes cuenta como una sola asistencia.
+  </p>
+</div>
+
+<!-- ÁREA DE IMPRESIÓN (se rellena al pulsar Imprimir) -->
+<div id="printArea"></div>
+
+<script>
+/* ============================================================
+   PLANIFICACIÓN — visualizador solo lectura
+   Backend canónico (mismo que partes v5.3 y vacaciones)
+   getPartes -> fetch GET (json)  ·  sync/getVacaciones -> JSONP
+============================================================ */
+var GS_URL = 'https://script.google.com/macros/s/AKfycbz8GF7XtR_bWvCm85pl_gHnseTCTBAKDaXwCaM9PBVvnDZ7zuIfFp2H71QFAidXF0KE/exec';
+
+var W = [];               // trabajadores [{id,n,ini,c,admin}]
+var FEST = [];            // ['YYYY-MM-DD'...]
+var CIERRES = [];         // ['YYYY-MM-DD'...]
+var VAC = {};             // { wid: Set('YYYY-MM-DD' aprobadas) }
+var PRES = {};            // { wid: Set('YYYY-MM-DD' con parte) }
+
+var ADMIN_PIN = '7777';   // fallback; se refresca desde config si llega
+var EXCLUIR = [9];        // Sergio (admin) fuera de la matriz
+
+var vista = 'sem';
+var ancla = new Date();   // día de referencia del rango visible
+var DOW = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+var MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+/* ---- utilidades de fecha ---- */
+function iso(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function addDays(d,n){ var x=new Date(d); x.setDate(x.getDate()+n); return x; }
+function esWE(d){ var k=d.getDay(); return k===0||k===6; }
+
+/* Normaliza fecha de partes (datetime/ISO/varios) a 'YYYY-MM-DD'.
+   Réplica de la intención de sanitizeFecha() de index_PROD. */
+function sanitizeFecha(v){
+  if(!v) return '';
+  if(v instanceof Date) return iso(v);
+  var s=String(v).trim();
+  var m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);          // ISO o datetime ISO
+  if(m) return m[1]+'-'+m[2]+'-'+m[3];
+  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);        // dd/mm/yyyy
+  if(m) return m[3]+'-'+String(m[2]).padStart(2,'0')+'-'+String(m[1]).padStart(2,'0');
+  var d=new Date(s); return isNaN(d)?'':iso(d);
+}
+
+/* ---- carga de datos (solo lectura) ---- */
+function jsonp(url, cb){
+  var s=document.createElement('script');
+  var fn='__pcb'+Date.now()+Math.floor(Math.random()*1000);
+  window[fn]=function(data){ try{cb(data);}finally{ delete window[fn]; if(s.parentNode)s.parentNode.removeChild(s); } };
+  s.src=url+(url.indexOf('?')>=0?'&':'?')+'callback='+fn;
+  s.onerror=function(){ delete window[fn]; if(s.parentNode)s.parentNode.removeChild(s); cb(null); };
+  document.body.appendChild(s);
+}
+
+function cargarSync(cb){
+  jsonp(GS_URL+'?action=sync', function(d){
+    if(d && d.trabajadores){
+      W = d.trabajadores
+        .filter(function(t){ return t.activo!==false && EXCLUIR.indexOf(+t.id)<0; })
+        .map(function(t){ return {id:+t.id, n:t.nombre, ini:t.iniciales, c:t.color||'#0F766E',
+                                  admin:(String(t.rol).toLowerCase()==='admin')}; })
+        .sort(function(a,b){ return a.id-b.id; });
+    }
+    if(d && d.config && d.config.admin_pin) ADMIN_PIN=String(d.config.admin_pin);
+    if(d && d.festivos) FEST=d.festivos.slice();
+    if(d && d.cierres)  CIERRES=d.cierres.slice();
+    cb && cb();
+  });
+}
+
+/* Vacaciones aprobadas + festivos + cierres del año */
+function cargarVacaciones(year, cb){
+  jsonp(GS_URL+'?action=getVacaciones&year='+year, function(d){
+    if(d){
+      if(d.festivos) FEST=mergeUniq(FEST,d.festivos);
+      if(d.cierres)  CIERRES=mergeUniq(CIERRES,d.cierres);
+      if(d.vacaciones){
+        d.vacaciones.forEach(function(v){
+          if(String(v.estado)!=='aprobado') return;
+          var w=+v.worker_id, f=sanitizeFecha(v.fecha);
+          if(!f) return;
+          (VAC[w]=VAC[w]||new Set()).add(f);
+        });
+      }
+    }
+    cb && cb();
+  });
+}
+
+/* Partes del rango -> presencia. fetch GET json (igual que index_PROD) */
+function cargarPartes(from, to, cb){
+  fetch(GS_URL+'?action=getPartes&from='+from+'&to='+to+'&_='+Date.now())
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(res){
+      if(res && res.status==='ok' && Array.isArray(res.partes)){
+        res.partes.forEach(function(p){
+          var w=+(p.worker_id||p.wid||0), f=sanitizeFecha(p.fecha||p.fe||'');
+          if(!w||!f) return;
+          (PRES[w]=PRES[w]||new Set()).add(f);
+        });
+        cb(true);
+      } else { cb(false,'El backend no devolvió partes (¿acción getPartes?).'); }
+    })
+    .catch(function(e){ cb(false, e.message); });
+}
+
+function mergeUniq(a,b){ var s=new Set(a); b.forEach(function(x){s.add(x);}); return Array.from(s); }
+
+/* ---- rango visible ---- */
+function rangoDias(){
+  var dias=[], i, d;
+  if(vista==='sem'){
+    var lunes=new Date(ancla);
+    var off=(lunes.getDay()+6)%7;            // 0 = lunes
+    lunes=addDays(lunes,-off);
+    for(i=0;i<7;i++) dias.push(addDays(lunes,i));
+  } else {
+    var first=new Date(ancla.getFullYear(),ancla.getMonth(),1);
+    var last=new Date(ancla.getFullYear(),ancla.getMonth()+1,0);
+    for(d=new Date(first);d<=last;d=addDays(d,1)) dias.push(new Date(d));
+  }
+  return dias;
+}
+
+function etiquetaRango(dias){
+  var a=dias[0], b=dias[dias.length-1];
+  if(vista==='mes') return MESES[a.getMonth()]+' '+a.getFullYear();
+  var f=function(x){ return x.getDate()+' '+MESES[x.getMonth()].slice(0,3); };
+  return f(a)+' – '+f(b);
+}
+
+/* ---- estado de una celda (prioridad) ---- */
+function estadoCelda(wid, fechaStr, d){
+  if(CIERRES.indexOf(fechaStr)>=0) return 'cierre';
+  if(FEST.indexOf(fechaStr)>=0)    return 'fest';
+  if(VAC[wid] && VAC[wid].has(fechaStr)) return 'vac';
+  if(PRES[wid] && PRES[wid].has(fechaStr)) return 'pres';
+  return 'na';
+}
+var GLYPH={cierre:'<i class="fas fa-building-lock gl"></i>',
+           fest:'<i class="fas fa-star gl"></i>',
+           vac:'<i class="fas fa-umbrella-beach gl"></i>',
+           pres:'<i class="fas fa-check gl"></i>',
+           na:'<span class="gl">–</span>'};
+
+/* ---- render ---- */
+function render(){
+  var dias=rangoDias();
+  document.getElementById('rangoLbl').textContent=etiquetaRango(dias);
+  var hoy=iso(new Date());
+
+  var head='<tr><th class="nameC" style="text-align:left">Trabajador</th>';
+  dias.forEach(function(d){
+    var s=iso(d), cls='';
+    if(CIERRES.indexOf(s)>=0) cls='cied';
+    else if(FEST.indexOf(s)>=0) cls='festd';
+    else if(esWE(d)) cls='we';
+    head+='<th class="'+cls+'">'+DOW[d.getDay()].slice(0,1)+'<br>'+d.getDate()+'</th>';
+  });
+  head+='</tr>';
+
+  var body='';
+  W.forEach(function(w){
+    var row='<tr><td class="nameC"><span class="av" style="background:'+w.c+'">'+w.ini+'</span>'+w.n+'</td>';
+    dias.forEach(function(d){
+      var s=iso(d), st=estadoCelda(w.id,s,d);
+      var extra=(esWE(d)&&st==='na')?' we':'';
+      row+='<td class="cell '+st+extra+'" title="'+w.n+' · '+s+'">'+GLYPH[st]+'</td>';
+    });
+    body+=row+'</tr>';
+  });
+
+  // fila totales: presentes por día laborable (no WE, no fest, no cierre)
+  var tot='<tr class="totR"><td class="nameC">Disponibles (con parte)</td>';
+  dias.forEach(function(d){
+    var s=iso(d);
+    if(esWE(d)||FEST.indexOf(s)>=0||CIERRES.indexOf(s)>=0){ tot+='<td>·</td>'; return; }
+    var n=0; W.forEach(function(w){ if(PRES[w.id]&&PRES[w.id].has(s)) n++; });
+    tot+='<td>'+n+'</td>';
+  });
+  tot+='</tr>';
+
+  document.querySelector('#grid tbody').innerHTML=head+body+tot;
+}
+
+/* ---- orquestación de carga por rango ---- */
+function recargar(){
+  setBanner('load','Cargando datos del periodo…');
+  PRES={};
+  var dias=rangoDias();
+  var from=iso(dias[0]), to=iso(dias[dias.length-1]);
+  var year=dias[Math.floor(dias.length/2)].getFullYear();
+
+  cargarVacaciones(year, function(){
+    cargarPartes(from,to,function(ok,msg){
+      if(ok) setBanner('ok','Google Sheets · '+W.length+' trabajadores · '+from+' → '+to);
+      else   setBanner('warn', msg||'No se pudieron cargar los partes.');
+      render();
+    });
+  });
+}
+
+function setBanner(state,msg){
+  var b=document.getElementById('banner');
+  var ic={ok:'fa-cloud',warn:'fa-triangle-exclamation',load:'fa-spinner fa-spin'};
+  b.className='banner '+state;
+  b.innerHTML='<i class="fas '+(ic[state]||'fa-info-circle')+'"></i> '+msg;
+}
+
+/* ---- controles ---- */
+function setVista(v){
+  vista=v;
+  document.getElementById('bSem').className=(v==='sem')?'on':'';
+  document.getElementById('bMes').className=(v==='mes')?'on':'';
+  recargar();
+}
+function mover(dir){
+  if(vista==='sem') ancla=addDays(ancla,dir*7);
+  else ancla=new Date(ancla.getFullYear(),ancla.getMonth()+dir,1);
+  recargar();
+}
+function irHoy(){ ancla=new Date(); recargar(); }
+
+/* ---- login ---- */
+function checkPin(){
+  var v=document.getElementById('gatePin').value.trim();
+  if(v===ADMIN_PIN){
+    document.getElementById('gate').classList.add('hide');
+    document.getElementById('app').classList.remove('hide');
+    recargar();
+  } else {
+    document.getElementById('gateErr').textContent='PIN incorrecto.';
+    document.getElementById('gatePin').value='';
+  }
+}
+document.getElementById('gatePin').addEventListener('keydown',function(e){ if(e.key==='Enter') checkPin(); });
+
+/* ============================================================
+   IMPRESIÓN — mes = 1 hoja · año = 12 hojas (A4 apaisado)
+============================================================ */
+function diasDelMes(y,m){ // m 0-11
+  var dias=[], last=new Date(y,m+1,0).getDate();
+  for(var i=1;i<=last;i++) dias.push(new Date(y,m,i));
+  return dias;
+}
+
+function tablaMesHTML(y,m){
+  var dias=diasDelMes(y,m);
+  var head='<tr><th class="pn">Trabajador</th>';
+  dias.forEach(function(d){
+    var s=iso(d), cls='';
+    if(CIERRES.indexOf(s)>=0) cls='cied';
+    else if(FEST.indexOf(s)>=0) cls='festd';
+    else if(esWE(d)) cls='we';
+    head+='<th class="'+cls+'">'+d.getDate()+'</th>';
+  });
+  head+='</tr>';
+
+  var glyph={cierre:'C',fest:'F',vac:'V',pres:'✓',na:''};
+  var body='';
+  W.forEach(function(w){
+    var row='<td class="pn">'+w.n+'</td>';
+    dias.forEach(function(d){
+      var s=iso(d), st=estadoCelda(w.id,s,d);
+      var extra=(esWE(d)&&st==='na')?' we':'';
+      row+='<td class="'+st+extra+'">'+glyph[st]+'</td>';
+    });
+    body+='<tr>'+row+'</tr>';
+  });
+
+  var tot='';
+
+  return '<table class="pTable"><tbody>'+head+body+tot+'</tbody></table>';
+}
+
+function bloqueMesHTML(y,m,fechaImp,conLeyenda){
+  return '<div class="pBlock">'+
+    '<div class="pHead">'+
+      '<h2>Planificación del taller — '+MESES[m].charAt(0).toUpperCase()+MESES[m].slice(1)+' '+y+'</h2>'+
+      '<div class="meta">Periodo: '+MESES[m]+' '+y+'<br>Impreso: '+fechaImp+'</div>'+
+    '</div>'+
+    tablaMesHTML(y,m)+
+    (conLeyenda ?
+      '<div class="pLeg">'+
+        '<span><b>✓</b> Parte registrado</span>'+
+        '<span><b>V</b> Vacaciones aprob.</span>'+
+        '<span><b>F</b> Festivo</span>'+
+        '<span><b>C</b> Cierre empresa</span>'+
+        '<span>(vacío) Sin dato — no implica ausencia, puede faltar el parte</span>'+
+      '</div>' : '')+
+  '</div>';
+}
+
+function imprimir(){
+  var fechaImp=new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  var y=ancla.getFullYear();
+  var meses = (vista==='mes') ? [ancla.getMonth()] : [0,1,2,3,4,5,6,7,8,9,10,11];
+
+  setBanner('load','Preparando informe…');
+
+  var from=iso(new Date(y,meses[0],1));
+  var to=iso(new Date(y,meses[meses.length-1]+1,0));
+  PRES={}; VAC={};
+  cargarVacaciones(y, function(){
+    cargarPartes(from,to,function(ok,msg){
+      if(!ok){ setBanner('warn', msg||'No se pudieron cargar los partes para imprimir.'); return; }
+      var html='';
+      if(vista==='mes'){
+        html='<div class="pPage">'+bloqueMesHTML(y,meses[0],fechaImp,true)+'</div>';
+      } else {
+        // 3 meses por página -> 4 páginas. Leyenda solo en el último bloque de cada página.
+        for(var i=0;i<meses.length;i+=3){
+          var grupo=meses.slice(i,i+3);
+          var pag='';
+          grupo.forEach(function(m,idx){
+            pag+=bloqueMesHTML(y,m,fechaImp,idx===grupo.length-1);
+          });
+          html+='<div class="pPage">'+pag+'</div>';
+        }
+      }
+      document.getElementById('printArea').innerHTML=html;
+      setBanner('ok','Informe listo · '+from+' → '+to);
+      render();
+      setTimeout(function(){ window.print(); }, 200);
+    });
+  });
+}
+
+/* atajo: ?w=9 entra directo si viene del index ya autenticado como admin */
+(function init(){
+  cargarSync(function(){
+    var p=new URLSearchParams(location.search);
+    if(p.get('w')==='9'){
+      document.getElementById('gate').classList.add('hide');
+      document.getElementById('app').classList.remove('hide');
+      recargar();
+    }
+  });
+})();
+</script>
+</body>
+</html>

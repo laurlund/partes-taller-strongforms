@@ -222,7 +222,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
 <header class="hdr">
  <button class="bk" id="bkBtn" onclick="goBack()"><i class="fas fa-arrow-left"></i></button>
  <div class="logo"><i class="fas fa-fire"></i></div>
- <div><h1>Taller Metálico</h1><span>Partes diarios <span style="color:#DC2626;font-weight:700">v5.5 · 16/06/2026</span></span></div>
+ <div><h1>Taller Metálico</h1><span>Partes diarios <span style="color:#DC2626;font-weight:700">v5.5 · 25/06/2026</span></span></div>
  <div class="sb loc" id="sb"><i class="fas fa-hdd"></i> Local</div>
 </header>
  
@@ -547,7 +547,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
  <button class="nb" data-t="Hoy" onclick="sw('Hoy')"><i class="fas fa-calendar-day"></i><span>Hoy</span></button>
  <button class="nb" data-t="Hist" onclick="sw('Hist')"><i class="fas fa-history"></i><span>Historial</span></button>
  <button class="nb" data-t="Admin" onclick="sw('Admin')"><i class="fas fa-cog"></i><span>Admin</span></button>
- <button class="nb" onclick="irVacaciones()"><i class="fas fa-umbrella-beach"></i><span>Vacaciones</span></button>
+ <button class="nb" onclick="location.href='vacaciones.html'"><i class="fas fa-umbrella-beach"></i><span>Vacaciones</span></button>
 </nav>
 <div class="tbox" id="tb"></div>
  
@@ -598,6 +598,10 @@ var CL  = [];
 var PR  = [];
 var TT  = ld('pt_tt', null);
 var FEST= ld('pt_fest', []); /* Array de strings 'YYYY-MM-DD' — festivos */
+/* v5.4: control de marcaje admin — vacaciones y cierres (solo lectura, desde getVacaciones).
+   No se persisten en localStorage: se recargan al abrir el dashboard. */
+var VACI = {};   /* { worker_id: Set('YYYY-MM-DD' vacaciones aprobadas) } */
+var CIERR = [];  /* ['YYYY-MM-DD' ...] cierres de empresa */
  
 /* Fusionar W_DEF: añadir trabajadores nuevos que no estén ya en W local */
 (function mergeWDef(){
@@ -748,11 +752,6 @@ function tst(m,t){
    NAVEGACIÓN PRINCIPAL (tabs)
    FIX: sw() asegura que pgNuevo está activo antes de shV()
 ============================================================ */
-function irVacaciones(){
-  /* pasa el trabajador ya autenticado para evitar segundo PIN */
-  if(curW){ location.href='vacaciones.html?w='+encodeURIComponent(curW); }
-  else { location.href='vacaciones.html'; }
-}
 function sw(t){
   /* Ocultar todas las páginas */
   var pgs=document.getElementsByClassName('pg');
@@ -1430,6 +1429,35 @@ function setBanner(state,msg){
   b.innerHTML='<i class="fas '+(ic[state]||'fa-info-circle')+'"></i> '+esc(msg);
 }
  
+/* v5.4: carga vacaciones+festivos+cierres (mismo contrato que planning.html).
+   JSONP, background, tolerante a fallo: si no responde, el control sigue como antes. */
+function loadVacCtrl(cb){
+  var url=ST.gsUrl||GS_URL; if(!url){cb&&cb();return;}
+  var year=new Date().getFullYear();
+  var fn='__vcb'+Date.now()+Math.floor(Math.random()*1000);
+  var s=document.createElement('script');
+  window[fn]=function(d){
+    try{
+      VACI={}; CIERR=[];
+      if(d){
+        if(d.cierres&&d.cierres.length) CIERR=d.cierres.slice();
+        if(d.festivos&&d.festivos.length){ d.festivos.forEach(function(f){ if(FEST.indexOf(f)<0) FEST.push(f); }); }
+        if(d.vacaciones&&d.vacaciones.length){
+          d.vacaciones.forEach(function(v){
+            if(String(v.estado)!=='aprobado') return;
+            var w=parseInt(v.worker_id)||v.worker_id, f=sanitizeFecha(v.fecha);
+            if(!w||!f) return;
+            (VACI[w]=VACI[w]||{})[f]=true;
+          });
+        }
+      }
+    }finally{ delete window[fn]; if(s.parentNode)s.parentNode.removeChild(s); cb&&cb(); }
+  };
+  s.onerror=function(){ delete window[fn]; if(s.parentNode)s.parentNode.removeChild(s); cb&&cb(); };
+  s.src=url+'?action=getVacaciones&year='+year+'&callback='+fn;
+  document.body.appendChild(s);
+}
+
 function loadFromSheets(){
   var url=ST.gsUrl||GS_URL;
   if(!url){setBanner('warn','Sin URL — usando datos locales');PD=P.slice();PD_src='local';rDash();return;}
@@ -1469,7 +1497,7 @@ function loadFromSheets(){
         var d30=new Date(); d30.setDate(d30.getDate()-30);
         document.getElementById('dD1').value=d30.toISOString().split('T')[0];
         document.getElementById('dD2').value=tod();
-        rDash(); rCtrlSem(); rDups();
+        rDash(); loadVacCtrl(function(){ rCtrlSem(); }); rDups();
       } else if(res.status==='ok' && !res.partes) {
         /* Apps Script viejo (solo tiene sync, no getPartes) */
         throw new Error('El script no tiene acción getPartes — redesplegar v3');
@@ -1957,13 +1985,25 @@ function rCtrlSem(){
       +esc(w.n.split(' ')[0])+'</div></td>';
     for(var i=0;i<5;i++){
       var fecha=dias[i];
-      var ef=FEST.indexOf(fecha)>=0,efut=(fecha>hoy),tp=conParte[String(w.id)+'_'+fecha]||false;
-      var cel,bg,col;
-      if(ef){cel='—';bg='var(--card2)';col='var(--bdr)';}
+      var ef=FEST.indexOf(fecha)>=0;                       /* festivo */
+      var ec=CIERR.indexOf(fecha)>=0;                       /* cierre empresa */
+      var ev=!!(VACI[w.id]&&VACI[w.id][fecha]);             /* vacación aprobada */
+      var efut=(fecha>hoy);
+      var tp=conParte[String(w.id)+'_'+fecha]||false;       /* tiene parte */
+      var noLab=ef||ec||ev;                                 /* día no laborable para este trabajador */
+      var cel,bg,col,ti='';
+      if(tp&&noLab){
+        /* TRABAJÓ en festivo/cierre/vacación — destacado ámbar (no es error: trabajo extraordinario) */
+        cel='✓';bg='#FFF7ED';col='#C2410C';
+        ti=ev?'Trabajó en vacaciones':ec?'Trabajó en día de cierre':'Trabajó en festivo';
+      }
+      else if(ec){cel='🔒';bg='#F5F3FF';col='#7C3AED';ti='Cierre de empresa';}
+      else if(ef){cel='—';bg='var(--card2)';col='var(--bdr)';ti='Festivo';}
+      else if(ev){cel='🏖';bg='#ECFEFF';col='#0891B2';ti='Vacaciones';}
       else if(efut){cel='';bg='#fff';col='var(--bdr)';}
       else if(tp){cel='✓';bg='#F0FDF4';col='var(--ok)';}
       else{cel='✗';bg='#FFF1F2';col='var(--err)';sinReg++;}
-      h+='<td style="text-align:center;padding:5px 2px;background:'+bg+';color:'+col+';font-weight:700;font-size:12px;border-bottom:1px solid var(--bdr);border-left:1px solid var(--bdr)">'+cel+'</td>';
+      h+='<td title="'+ti+'" style="text-align:center;padding:5px 2px;background:'+bg+';color:'+col+';font-weight:700;font-size:12px;border-bottom:1px solid var(--bdr);border-left:1px solid var(--bdr)">'+cel+'</td>';
     }
     h+='</tr>';
   });
@@ -1971,7 +2011,13 @@ function rCtrlSem(){
   var res=sinReg===0
     ?'<div style="margin-top:8px;font-size:10px;color:var(--ok);font-weight:700"><i class="fas fa-check-circle"></i> Todos han registrado ✓</div>'
     :'<div style="margin-top:8px;font-size:10px;color:var(--err);font-weight:700"><i class="fas fa-exclamation-circle"></i> '+sinReg+' registro(s) pendiente(s) esta semana</div>';
-  document.getElementById('tblCtrl').innerHTML=h+res;
+  var leg='<div style="margin-top:6px;font-size:8px;color:var(--muted);line-height:1.5">'
+    +'<span style="color:var(--ok)">✓</span> registrado · '
+    +'<span style="color:var(--err)">✗</span> pendiente · '
+    +'<span style="color:#C2410C;background:#FFF7ED;padding:0 3px;border-radius:3px">✓</span> trabajó en festivo/cierre/vacaciones · '
+    +'<span style="color:#7C3AED">🔒</span> cierre · — festivo · <span style="color:#0891B2">🏖</span> vacaciones'
+    +'</div>';
+  document.getElementById('tblCtrl').innerHTML=h+res+leg;
 }
 /* CSV / EMAIL */
 /* ============================================================
@@ -2240,15 +2286,6 @@ try{
   });
   poblarMesSel();
   rWG(); rTC(); rClDL(); rPrDL(); rSug(); rHoy(); uSB(); ldQR();
-  /* Autologin si viene ?w=ID desde vacaciones (PIN ya validado) → evita segundo PIN */
-  (function(){
-    var mm=location.search.match(/[?&]w=([^&]+)/);
-    if(mm){
-      var wid=decodeURIComponent(mm[1]);
-      var w=W.find(function(x){return String(x.id)===String(wid);});
-      if(w){ curW=w.id; curT=null; if(w.admin) shV('dash'); else shV('jor'); }
-    }
-  })();
   /* Sync config en background — silencioso, sin bloquear UI */
   setTimeout(function(){syncConfig(false);}, 1200);
   /* v5.2: reintento — como CL/PR ya no se cachean, si el primer sync falla

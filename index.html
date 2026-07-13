@@ -222,7 +222,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--fg)
 <header class="hdr">
  <button class="bk" id="bkBtn" onclick="goBack()"><i class="fas fa-arrow-left"></i></button>
  <div class="logo"><i class="fas fa-fire"></i></div>
- <div><h1>Taller Metálico</h1><span>Partes diarios <span style="color:#DC2626;font-weight:700">v5.5 · 25/06/2026</span></span></div>
+ <div><h1>Taller Metálico</h1><span>Partes diarios <span style="color:#DC2626;font-weight:700">v5.6 · 13/07/2026</span></span></div>
  <div class="sb loc" id="sb"><i class="fas fa-hdd"></i> Local</div>
 </header>
  
@@ -1967,8 +1967,19 @@ function rCtrlSem(){
   var hoy=toYMD(new Date());
   var wks=W.filter(function(w){return !w.admin;});
   var conParte={};
-  PD.forEach(function(p){if(p.fe&&p.wid)conParte[String(p.wid)+'_'+p.fe]=true;});
-  P.forEach(function(p){if(p.fe&&p.wid)conParte[String(p.wid)+'_'+p.fe]=true;});
+  var conAus={};
+  PD.forEach(function(p){
+    if(!p.fe||!p.wid) return;
+    var k=String(p.wid)+'_'+p.fe;
+    conParte[k]=true;
+    if(p.ti==='ausencia'||p.tt==='Ausencia') conAus[k]=p.ds||p.ob||'Ausencia';
+  });
+  P.forEach(function(p){
+    if(!p.fe||!p.wid) return;
+    var k=String(p.wid)+'_'+p.fe;
+    conParte[k]=true;
+    if(p.ti==='ausencia'||p.tt==='Ausencia') conAus[k]=p.ds||p.ob||'Ausencia';
+  });
   var h='<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr>';
   h+='<th style="text-align:left;padding:5px 6px;font-size:9px;color:var(--muted);font-weight:700;border-bottom:2px solid var(--bdr)">Trabajador</th>';
   for(var i=0;i<5;i++){
@@ -1990,12 +2001,18 @@ function rCtrlSem(){
       var ev=!!(VACI[w.id]&&VACI[w.id][fecha]);             /* vacación aprobada */
       var efut=(fecha>hoy);
       var tp=conParte[String(w.id)+'_'+fecha]||false;       /* tiene parte */
+      var au=conAus[String(w.id)+'_'+fecha]||'';            /* ausencia registrada (cualquier motivo) */
       var noLab=ef||ec||ev;                                 /* día no laborable para este trabajador */
       var cel,bg,col,ti='';
-      if(tp&&noLab){
+      if(tp&&noLab&&!au){
         /* TRABAJÓ en festivo/cierre/vacación — destacado ámbar (no es error: trabajo extraordinario) */
         cel='✓';bg='#FFF7ED';col='#C2410C';
         ti=ev?'Trabajó en vacaciones':ec?'Trabajó en día de cierre':'Trabajó en festivo';
+      }
+      else if(au){
+        /* AUSENCIA registrada — enfermedad, baja médica, asuntos propios, permiso no retribuido u otro */
+        cel='<i class="fas fa-user-slash"></i>';bg='#FDF2F8';col='#DB2777';
+        ti=esc(au);
       }
       else if(ec){cel='🔒';bg='#F5F3FF';col='#7C3AED';ti='Cierre de empresa';}
       else if(ef){cel='—';bg='var(--card2)';col='var(--bdr)';ti='Festivo';}
@@ -2015,7 +2032,8 @@ function rCtrlSem(){
     +'<span style="color:var(--ok)">✓</span> registrado · '
     +'<span style="color:var(--err)">✗</span> pendiente · '
     +'<span style="color:#C2410C;background:#FFF7ED;padding:0 3px;border-radius:3px">✓</span> trabajó en festivo/cierre/vacaciones · '
-    +'<span style="color:#7C3AED">🔒</span> cierre · — festivo · <span style="color:#0891B2">🏖</span> vacaciones'
+    +'<span style="color:#7C3AED">🔒</span> cierre · — festivo · <span style="color:#0891B2">🏖</span> vacaciones · '
+    +'<span style="color:#DB2777"><i class="fas fa-user-slash"></i></span> ausencia'
     +'</div>';
   document.getElementById('tblCtrl').innerHTML=h+res+leg;
 }
